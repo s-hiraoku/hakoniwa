@@ -62,7 +62,7 @@ export class CodexGatewayProvider implements AgentBackendProvider {
     const client = await this.client();
     return toTaskDetail(
       await client.createTask({
-        repoId: input.repoId,
+        repo: input.repoId,
         prompt: input.prompt,
         mode: input.mode
       }),
@@ -104,7 +104,10 @@ export class CodexGatewayProvider implements AgentBackendProvider {
 
       while (!signal.aborted) {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+          handlers.onError(new Error("Codex Gateway event stream closed."));
+          break;
+        }
         buffer += decoder.decode(value, { stream: true });
         const chunks = buffer.split("\n\n");
         buffer = chunks.pop() ?? "";
@@ -131,36 +134,42 @@ export class CodexGatewayProvider implements AgentBackendProvider {
 function toTaskDetail(
   task: CodexGatewayTask,
   providerId: string,
-  repoId = task.repoId ?? "unknown",
-  prompt = task.prompt ?? "",
+  repoId = task.repo,
+  prompt = "",
   mode: "read-only" | "workspace-write" = task.mode ?? "workspace-write"
 ): AgentTaskDetail {
   const now = new Date().toISOString();
+  const createdAt = task.createdAt ?? now;
   return {
-    id: task.id,
+    id: task.taskId,
     providerId,
     repoId,
     status: normalizeStatus(task.status),
-    createdAt: task.createdAt ?? now,
-    updatedAt: task.updatedAt ?? now,
+    createdAt,
+    updatedAt: task.completedAt ?? createdAt,
     prompt,
     mode,
-    title: task.title ?? (prompt.slice(0, 80) || `Task ${task.id}`),
+    title: prompt.slice(0, 80) || `Task ${task.taskId}`,
     summary: task.summary,
-    changedFiles: task.changedFiles ?? [],
+    changedFiles: (task.changedFiles ?? []).map((file) =>
+      typeof file === "string" ? { path: file, status: "modified" } : file
+    ),
     events: (task.events ?? []).map((event, index) => ({
-      id: event.id ?? `${task.id}.${index}`,
-      taskId: task.id,
+      id: event.id ?? `${task.taskId}.${index}`,
+      taskId: task.taskId,
       type: normalizeEventType(event.type),
       message: event.message ?? event.type,
       createdAt: event.createdAt ?? now,
       metadata: event.metadata
     })),
-    error: task.error
+    error: task.error ?? undefined
   };
 }
 
 function normalizeStatus(status: string | undefined): AgentTaskStatus {
+  if (status === "pending") {
+    return "queued";
+  }
   if (
     status === "draft" ||
     status === "queued" ||

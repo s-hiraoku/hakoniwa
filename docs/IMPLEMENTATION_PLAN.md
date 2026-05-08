@@ -20,6 +20,11 @@
 - Gateway task creation
 - task board and task detail
 - timeline with SSE and polling fallback
+- Codex Gateway wire schema normalization
+- task snapshot updates from polling and SSE
+- Gateway URL/token origin safety
+- IPC payload validation
+- clean-clone `npm run dev` startup
 - model provider placeholders
 - worktree, terminal, browser, and diff placeholders
 

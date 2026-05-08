@@ -9,7 +9,7 @@ Hakoniwa is not a VS Code extension, not Theia, not codex-app-server, and not a 
 
 ```bash
 npm install
-npm run dev:electron
+npm run dev
 ```
 
 Useful checks:
@@ -27,11 +27,11 @@ D1 supports Codex Gateway as the first Agent Backend Provider.
 Environment variables are optional:
 
 ```bash
-CODEX_GATEWAY_URL=http://127.0.0.1:3000
+CODEX_GATEWAY_URL=http://127.0.0.1:8787
 CODEX_GATEWAY_TOKEN=...
 ```
 
-Secrets are held in the Electron main process session memory. The renderer receives only configured/missing credential state.
+Secrets are held in the Electron main process session memory. The renderer receives only configured/missing credential state. If the Gateway URL changes without a new token, Hakoniwa clears the previous token and asks for re-entry.
 
 ## D1 Scope
 
@@ -39,10 +39,11 @@ Implemented:
 
 - Electron + React + TypeScript + Vite app shell
 - secure main/preload/renderer split
+- sandbox-compatible bundled CommonJS preload
 - typed IPC
 - provider registry foundation
 - Agent Backend Provider and Model Provider type separation
-- Codex Gateway health, repo list, task create, task detail, SSE/polling monitoring
+- Codex Gateway health, repo list, task create, task detail, task snapshot updates, SSE/polling monitoring
 - provider settings and model provider placeholders
 - task board, task detail, timeline, diff placeholder, terminal placeholder, browser placeholder
 - architecture docs

@@ -21,7 +21,7 @@ function App() {
 
   useEffect(() => {
     void window.hakoniwa.getProviderSnapshot().then(setSnapshot);
-    return window.hakoniwa.onTaskEvent((event) => {
+    const offTaskEvent = window.hakoniwa.onTaskEvent((event) => {
       setTasks((current) =>
         current.map((task) =>
           task.id === event.taskId
@@ -30,6 +30,19 @@ function App() {
         )
       );
     });
+    const offTaskUpdated = window.hakoniwa.onTaskUpdated((updatedTask) => {
+      setTasks((current) =>
+        current.map((task) =>
+          task.id === updatedTask.id
+            ? mergeTaskForRenderer(task, updatedTask)
+            : task
+        )
+      );
+    });
+    return () => {
+      offTaskEvent();
+      offTaskUpdated();
+    };
   }, []);
 
   async function refreshTargets() {
@@ -278,6 +291,9 @@ function SettingsPanel(props: {
   const credentialState = codex?.credentialRefs.token
     ? props.snapshot?.credentialStates[codex.credentialRefs.token.id]
     : "missing";
+  const savedGatewayUrl = String(codex?.settings.gatewayUrl ?? "");
+  const gatewayUrlChanged = Boolean(savedGatewayUrl && savedGatewayUrl !== gatewayUrl);
+  const requiresTokenReentry = gatewayUrlChanged && credentialState === "configured" && !token.trim();
 
   async function save() {
     const next = await window.hakoniwa.saveCodexGatewaySettings({
@@ -288,7 +304,11 @@ function SettingsPanel(props: {
     });
     setToken("");
     props.setSnapshot(next);
-    props.setNotice("Codex Gateway settings saved for this session.");
+    props.setNotice(
+      requiresTokenReentry
+        ? "Gateway URL changed; re-enter the token before connecting."
+        : "Codex Gateway settings saved for this session."
+    );
   }
 
   async function checkHealth() {
@@ -311,9 +331,12 @@ function SettingsPanel(props: {
           <input
             value={gatewayUrl}
             onChange={(event) => setGatewayUrl(event.target.value)}
-            placeholder="http://127.0.0.1:3000"
+            placeholder="http://127.0.0.1:8787"
           />
         </label>
+        {requiresTokenReentry ? (
+          <div className="warning-box">Gateway URL changed; please re-enter the token.</div>
+        ) : null}
         <label>
           Gateway token
           <input
@@ -496,6 +519,15 @@ function TimelineEvent({ event }: { event: AgentTaskEvent }) {
 
 function StatusPill({ status }: { status: string }) {
   return <span className={`status-pill status-${status}`}>{status}</span>;
+}
+
+function mergeTaskForRenderer(previous: AgentTaskDetail, next: AgentTaskDetail): AgentTaskDetail {
+  const eventIds = new Set(next.events.map((event) => event.id));
+  const localEvents = previous.events.filter((event) => !eventIds.has(event.id));
+  return {
+    ...next,
+    events: [...next.events, ...localEvents].sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+  };
 }
 
 createRoot(document.getElementById("root")!).render(<App />);

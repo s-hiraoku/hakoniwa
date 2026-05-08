@@ -16,7 +16,8 @@ export const IPC_CHANNELS = {
   getTask: "hakoniwa:tasks:get",
   subscribeTask: "hakoniwa:tasks:subscribe",
   unsubscribeTask: "hakoniwa:tasks:unsubscribe",
-  taskEvent: "hakoniwa:tasks:event"
+  taskEvent: "hakoniwa:tasks:event",
+  taskUpdated: "hakoniwa:tasks:updated"
 } as const;
 
 export interface SaveCodexGatewaySettingsInput {
@@ -36,4 +37,5 @@ export interface HakoniwaApi {
   subscribeTask(taskId: string): Promise<void>;
   unsubscribeTask(taskId: string): Promise<void>;
   onTaskEvent(handler: (event: AgentTaskEvent) => void): () => void;
+  onTaskUpdated(handler: (task: AgentTaskDetail) => void): () => void;
 }

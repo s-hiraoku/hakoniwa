@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { IPC_CHANNELS, type SaveCodexGatewaySettingsInput } from "../shared/ipc.js";
 import type { CreateAgentTaskInput } from "../shared/providers.js";
 import { ProviderRuntime } from "./providerRuntime.js";
@@ -20,7 +21,7 @@ function createMainWindow(): void {
     title: "Hakoniwa",
     backgroundColor: "#f7f6f1",
     webPreferences: {
-      preload: join(__dirname, "../preload/preload.js"),
+      preload: join(__dirname, "../preload/preload.cjs"),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true
@@ -52,27 +53,49 @@ function registerIpcHandlers(): void {
   ipcMain.handle(
     IPC_CHANNELS.saveCodexGatewaySettings,
     (_event, input: SaveCodexGatewaySettingsInput) =>
-      providerRuntime.saveCodexGatewaySettings({
-        gatewayUrl: String(input.gatewayUrl ?? ""),
-        token: input.token,
-        preferSse: Boolean(input.preferSse),
-        pollingIntervalMs: Number(input.pollingIntervalMs)
-      })
+      providerRuntime.saveCodexGatewaySettings(saveCodexGatewaySettingsSchema.parse(input))
   );
   ipcMain.handle(IPC_CHANNELS.checkProviderHealth, (_event, providerId: string) =>
-    providerRuntime.checkProviderHealth(providerId)
+    providerRuntime.checkProviderHealth(providerIdSchema.parse(providerId))
   );
   ipcMain.handle(IPC_CHANNELS.listTargets, (_event, providerId: string) =>
-    providerRuntime.listTargets(providerId)
+    providerRuntime.listTargets(providerIdSchema.parse(providerId))
   );
   ipcMain.handle(IPC_CHANNELS.createTask, (_event, input: CreateAgentTaskInput) =>
-    providerRuntime.createTask(input)
+    providerRuntime.createTask(createTaskInputSchema.parse(input))
   );
-  ipcMain.handle(IPC_CHANNELS.getTask, (_event, taskId: string) => providerRuntime.getTask(taskId));
+  ipcMain.handle(IPC_CHANNELS.getTask, (_event, taskId: string) =>
+    providerRuntime.getTask(taskIdSchema.parse(taskId))
+  );
   ipcMain.handle(IPC_CHANNELS.subscribeTask, (_event, taskId: string) =>
-    providerRuntime.subscribeTask(taskId)
+    providerRuntime.subscribeTask(taskIdSchema.parse(taskId))
   );
   ipcMain.handle(IPC_CHANNELS.unsubscribeTask, (_event, taskId: string) =>
-    providerRuntime.unsubscribeTask(taskId)
+    providerRuntime.unsubscribeTask(taskIdSchema.parse(taskId))
   );
 }
+
+const providerIdSchema = z.string().min(1).max(200);
+const taskIdSchema = z.string().min(1).max(200);
+
+const gatewayUrlSchema = z.string().url().refine(
+  (value) => {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  },
+  { message: "Gateway URL must be an http or https URL." }
+);
+
+const saveCodexGatewaySettingsSchema = z.object({
+  gatewayUrl: gatewayUrlSchema,
+  token: z.string().max(20_000).optional(),
+  preferSse: z.boolean(),
+  pollingIntervalMs: z.number().int().min(1000).max(60_000)
+});
+
+const createTaskInputSchema = z.object({
+  providerId: providerIdSchema,
+  repoId: z.string().min(1).max(300),
+  prompt: z.string().min(1).max(20_000),
+  mode: z.enum(["read-only", "workspace-write"])
+}) satisfies z.ZodType<CreateAgentTaskInput>;

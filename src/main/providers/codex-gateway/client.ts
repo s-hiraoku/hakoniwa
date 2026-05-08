@@ -27,7 +27,11 @@ export class CodexGatewayClient {
     return taskSchema.parse(
       await this.request("/v1/tasks", {
         method: "POST",
-        body: JSON.stringify(input)
+        body: JSON.stringify({
+          repo: input.repo,
+          prompt: input.prompt,
+          mode: input.mode
+        })
       })
     );
   }
@@ -131,12 +135,15 @@ const reposResponseSchema = z.union([
   z.array(repoSchema).transform((repos) => ({ repos }))
 ]);
 
-const changedFileSchema = z
-  .object({
-    path: z.string(),
-    status: z.enum(["added", "modified", "deleted", "renamed", "unknown"]).default("unknown")
-  })
-  .passthrough();
+const changedFileSchema = z.union([
+  z.string(),
+  z
+    .object({
+      path: z.string(),
+      status: z.enum(["added", "modified", "deleted", "renamed", "unknown"]).default("unknown")
+    })
+    .passthrough()
+]);
 
 const eventSchema = z
   .object({
@@ -150,18 +157,16 @@ const eventSchema = z
 
 const taskSchema = z
   .object({
-    id: z.string(),
-    repoId: z.string().optional(),
+    taskId: z.string(),
+    repo: z.string(),
     status: z.string().optional(),
-    prompt: z.string().optional(),
     mode: z.enum(["read-only", "workspace-write"]).optional(),
-    title: z.string().optional(),
-    summary: z.string().optional(),
+    summary: z.string().optional().default(""),
     changedFiles: z.array(changedFileSchema).optional(),
-    events: z.array(eventSchema).optional(),
-    error: z.string().optional(),
+    events: z.array(eventSchema).optional().default([]),
+    error: z.string().nullable().optional(),
     createdAt: z.string().optional(),
-    updatedAt: z.string().optional()
+    completedAt: z.string().nullable().optional()
   })
   .passthrough();
 
@@ -170,7 +175,7 @@ export type CodexGatewayRepo = z.infer<typeof repoSchema>;
 export type CodexGatewayTask = z.infer<typeof taskSchema>;
 
 export interface CodexGatewayCreateTaskInput {
-  repoId: string;
+  repo: string;
   prompt: string;
   mode: "read-only" | "workspace-write";
 }

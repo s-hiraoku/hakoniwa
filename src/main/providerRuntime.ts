@@ -54,16 +54,22 @@ export class ProviderRuntime {
     pollingIntervalMs: number;
   }): Promise<ProviderSnapshot> {
     const config = this.getConfig(CODEX_GATEWAY_PROVIDER_ID);
+    const previousGatewayUrl = String(config.settings.gatewayUrl ?? "");
+    const nextGatewayUrl = input.gatewayUrl;
+    const tokenRef = config.credentialRefs.token;
+    const nextToken = input.token?.trim();
+
     config.settings = {
-      gatewayUrl: input.gatewayUrl,
+      gatewayUrl: nextGatewayUrl,
       preferSse: input.preferSse,
       pollingIntervalMs: input.pollingIntervalMs
     };
     config.updatedAt = new Date().toISOString();
 
-    const tokenRef = config.credentialRefs.token;
-    if (tokenRef && input.token && input.token.trim()) {
-      await this.vault.set(tokenRef, input.token.trim());
+    if (tokenRef && nextToken) {
+      await this.vault.set(tokenRef, nextToken);
+    } else if (tokenRef && previousGatewayUrl && previousGatewayUrl !== nextGatewayUrl) {
+      await this.vault.delete(tokenRef);
     }
 
     return this.snapshot();
@@ -90,7 +96,7 @@ export class ProviderRuntime {
   }): Promise<AgentTaskDetail> {
     const provider = this.getAgentBackend(input.providerId);
     const ref = await provider.createTask(input);
-    const detail = await provider.getTask(ref.id).catch(() => ({
+    const localDetail: AgentTaskDetail = {
       ...ref,
       prompt: input.prompt,
       mode: input.mode,
@@ -105,8 +111,13 @@ export class ProviderRuntime {
           createdAt: ref.createdAt
         }
       ]
-    }));
+    };
+    const detail = await provider
+      .getTask(ref.id)
+      .then((fetched) => mergeLocalTask(localDetail, fetched))
+      .catch(() => localDetail);
     this.tasks.set(detail.id, detail);
+    this.emitTaskUpdated(detail);
     return detail;
   }
 
@@ -118,7 +129,9 @@ export class ProviderRuntime {
     const provider = this.getAgentBackend(cached.providerId);
     const detail = await provider.getTask(taskId);
     this.tasks.set(taskId, mergeLocalTask(cached, detail));
-    return this.tasks.get(taskId)!;
+    const updated = this.tasks.get(taskId)!;
+    this.emitTaskUpdated(updated);
+    return updated;
   }
 
   async subscribeTask(taskId: string): Promise<void> {
@@ -131,7 +144,10 @@ export class ProviderRuntime {
 
     if (preferSse && provider.subscribeTaskEvents) {
       const subscription = provider.subscribeTaskEvents(taskId, {
-        onEvent: (event) => this.recordEvent(taskId, event),
+        onEvent: (event) => {
+          this.recordEvent(taskId, event);
+          void this.refreshTaskSnapshot(taskId);
+        },
         onError: () => {
           this.subscriptions.delete(taskId);
           this.startPolling(taskId);
@@ -164,6 +180,9 @@ export class ProviderRuntime {
             message: `Task status is ${detail.status}.`,
             createdAt: new Date().toISOString()
           });
+          if (isTerminalStatus(detail.status)) {
+            void this.unsubscribeTask(taskId);
+          }
         })
         .catch((error) => {
           this.recordEvent(taskId, {
@@ -195,6 +214,27 @@ export class ProviderRuntime {
     this.getMainWindow()?.webContents.send(IPC_CHANNELS.taskEvent, event);
   }
 
+  private async refreshTaskSnapshot(taskId: string): Promise<void> {
+    try {
+      const detail = await this.getTask(taskId);
+      if (isTerminalStatus(detail.status)) {
+        await this.unsubscribeTask(taskId);
+      }
+    } catch (error) {
+      this.recordEvent(taskId, {
+        id: crypto.randomUUID(),
+        taskId,
+        type: "task.failed",
+        message: error instanceof Error ? error.message : "Task refresh failed.",
+        createdAt: new Date().toISOString()
+      });
+    }
+  }
+
+  private emitTaskUpdated(task: AgentTaskDetail): void {
+    this.getMainWindow()?.webContents.send(IPC_CHANNELS.taskUpdated, task);
+  }
+
   private getAgentBackend(providerId: string): AgentBackendProvider {
     const config = this.getConfig(providerId);
     if (!config.enabled) {
@@ -218,6 +258,13 @@ function mergeLocalTask(previous: AgentTaskDetail, next: AgentTaskDetail): Agent
   const localEvents = previous.events.filter((event) => !eventIds.has(event.id));
   return {
     ...next,
+    prompt: next.prompt || previous.prompt,
+    mode: next.mode ?? previous.mode,
+    title: next.title.startsWith("Task ") ? previous.title : next.title,
     events: [...next.events, ...localEvents].sort((a, b) => a.createdAt.localeCompare(b.createdAt))
   };
+}
+
+function isTerminalStatus(status: AgentTaskDetail["status"]): boolean {
+  return status === "completed" || status === "failed" || status === "cancelled";
 }

@@ -7,7 +7,7 @@ Hakoniwa is not a VS Code extension, Theia fork, codex-app-server, or generic LL
 ## Process Model
 
 - Electron main process owns privileged work: provider networking, secrets, future filesystem/worktree orchestration, and future terminal process management.
-- Preload exposes a minimal typed IPC bridge through `window.hakoniwa`.
+- Preload exposes a minimal typed IPC bridge through `window.hakoniwa` and is bundled to CommonJS for Electron sandbox compatibility.
 - Renderer owns UI only. It does not receive Electron or Node primitives and does not execute shell commands.
 
 Electron security defaults:

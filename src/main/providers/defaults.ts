@@ -16,7 +16,7 @@ export function createDefaultProviderConfigs(): {
         displayName: "Codex Gateway",
         enabled: true,
         settings: {
-          gatewayUrl: process.env.CODEX_GATEWAY_URL ?? "",
+          gatewayUrl: process.env.CODEX_GATEWAY_URL ?? "http://127.0.0.1:8787",
           preferSse: true,
           pollingIntervalMs: 3000
         },

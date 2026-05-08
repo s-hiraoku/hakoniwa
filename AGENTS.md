@@ -323,6 +323,7 @@ When working in this repository:
 - Add docs when adding architecture.
 - Add tests when adding logic.
 - Run available checks before finishing.
+- When opening a pull request for this repository, create a regular ready-for-review PR by default. Use a draft PR only when the user explicitly asks for draft.
 
 Use existing package scripts when available.
 

@@ -298,6 +298,14 @@ p {
   padding: 9px;
 }
 
+.warning-box {
+  border: 1px solid #b89b3b;
+  color: #60480f;
+  background: #fff6d8;
+  border-radius: 6px;
+  padding: 9px;
+}
+
 .right-rail {
   display: grid;
   gap: 12px;
