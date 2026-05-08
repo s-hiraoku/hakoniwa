@@ -313,6 +313,7 @@ function SettingsPanel(props: {
   const [preferSse, setPreferSse] = useState(true);
   const [pollingIntervalMs, setPollingIntervalMs] = useState(3000);
   const [healthChecking, setHealthChecking] = useState(false);
+  const [localHealth, setLocalHealth] = useState<ProviderSnapshot["health"][string]>();
 
   useEffect(() => {
     if (codex) {
@@ -325,7 +326,7 @@ function SettingsPanel(props: {
   const credentialState = codex?.credentialRefs.token
     ? props.snapshot?.credentialStates[codex.credentialRefs.token.id]
     : "missing";
-  const health = props.snapshot?.health[CODEX_GATEWAY_PROVIDER_ID];
+  const health = localHealth ?? props.snapshot?.health[CODEX_GATEWAY_PROVIDER_ID];
   const savedGatewayUrl = String(codex?.settings.gatewayUrl ?? "");
   const gatewayUrlChanged = Boolean(savedGatewayUrl && savedGatewayUrl !== gatewayUrl);
   const tokenIsMasked = token === MASKED_TOKEN_VALUE;
@@ -373,15 +374,28 @@ function SettingsPanel(props: {
   }
 
   async function checkHealth() {
+    const startedAt = new Date().toISOString();
     if (!window.hakoniwa) {
-      props.setNotice("Hakoniwa preload bridge is unavailable.");
+      const unavailableHealth = {
+        status: "error" as const,
+        message: "Hakoniwa preload bridge is unavailable.",
+        checkedAt: startedAt
+      };
+      setLocalHealth(unavailableHealth);
+      props.setNotice(unavailableHealth.message);
       return;
     }
     setHealthChecking(true);
+    setLocalHealth({
+      status: "configured",
+      message: "Health check started. Waiting for Codex Gateway response...",
+      checkedAt: startedAt
+    });
     props.setNotice("Checking Codex Gateway health...");
     try {
       const health = await window.hakoniwa.checkProviderHealth(CODEX_GATEWAY_PROVIDER_ID);
       const nextSnapshot = await window.hakoniwa.getProviderSnapshot();
+      setLocalHealth(health);
       props.setSnapshot({
         ...nextSnapshot,
         health: {
@@ -393,6 +407,11 @@ function SettingsPanel(props: {
       if (health.status === "connected") await props.onRefreshTargets();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Health check failed.";
+      setLocalHealth({
+        status: "error",
+        message,
+        checkedAt: new Date().toISOString()
+      });
       props.setNotice(message);
     }
     setHealthChecking(false);
@@ -445,7 +464,9 @@ function SettingsPanel(props: {
         </div>
         <div className="button-row">
           <button onClick={save}>Save</button>
-          <button onClick={checkHealth}>Health check</button>
+          <button onClick={checkHealth} disabled={healthChecking}>
+            {healthChecking ? "Checking..." : "Health check"}
+          </button>
         </div>
         <div className={health?.status === "error" ? "error-box" : "status-box"}>
           <strong>Gateway health</strong>
