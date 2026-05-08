@@ -343,7 +343,6 @@ function SettingsPanel(props: {
       return;
     }
     try {
-      await saveSettings();
       const health = await window.hakoniwa.checkProviderHealth(CODEX_GATEWAY_PROVIDER_ID);
       props.setSnapshot(await window.hakoniwa.getProviderSnapshot());
       props.setNotice(health.message);
@@ -396,7 +395,7 @@ function SettingsPanel(props: {
         </div>
         <div className="button-row">
           <button onClick={save}>Save</button>
-          <button onClick={checkHealth}>Save & health check</button>
+          <button onClick={checkHealth}>Health check</button>
         </div>
         <div className={health?.status === "error" ? "error-box" : "status-box"}>
           <strong>Connection</strong>
