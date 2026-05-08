@@ -313,6 +313,15 @@ p {
   font-size: 12px;
 }
 
+.help-box {
+  border: 1px solid #d8d0be;
+  color: #655d51;
+  background: #f7f4ed;
+  border-radius: 6px;
+  padding: 8px 9px;
+  font-size: 12px;
+}
+
 .warning-box {
   border: 1px solid #b89b3b;
   color: #60480f;

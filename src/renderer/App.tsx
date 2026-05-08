@@ -10,6 +10,7 @@ import type {
 import "./styles/app.css";
 
 const CODEX_GATEWAY_PROVIDER_ID = "agent-backend.codex-gateway.default";
+const MASKED_TOKEN_VALUE = "••••••••";
 
 function App() {
   const [snapshot, setSnapshot] = useState<ProviderSnapshot>();
@@ -287,6 +288,7 @@ function RightRail(props: {
 function SettingsPanel(props: {
   snapshot?: ProviderSnapshot;
   setSnapshot(snapshot: ProviderSnapshot): void;
+  targets: ProviderTarget[];
   onRefreshTargets(): Promise<void>;
   setNotice(message: string): void;
 }) {
@@ -310,7 +312,24 @@ function SettingsPanel(props: {
   const health = props.snapshot?.health[CODEX_GATEWAY_PROVIDER_ID];
   const savedGatewayUrl = String(codex?.settings.gatewayUrl ?? "");
   const gatewayUrlChanged = Boolean(savedGatewayUrl && savedGatewayUrl !== gatewayUrl);
-  const requiresTokenReentry = gatewayUrlChanged && credentialState === "configured" && !token.trim();
+  const tokenIsMasked = token === MASKED_TOKEN_VALUE;
+  const tokenForSave = tokenIsMasked ? undefined : token;
+  const hasTokenInput = Boolean(tokenForSave?.trim());
+  const requiresTokenReentry = gatewayUrlChanged && credentialState === "configured" && !hasTokenInput;
+  const tokenStatusMessage = hasTokenInput
+    ? "New token will be saved in main process memory."
+    : credentialState === "configured"
+      ? "Token is saved for this session."
+      : "No token is saved for this session.";
+
+  useEffect(() => {
+    if (credentialState === "configured" && !token) {
+      setToken(MASKED_TOKEN_VALUE);
+    }
+    if (credentialState !== "configured" && tokenIsMasked) {
+      setToken("");
+    }
+  }, [credentialState, token, tokenIsMasked]);
 
   async function saveSettings() {
     if (!window.hakoniwa) {
@@ -319,11 +338,11 @@ function SettingsPanel(props: {
     }
     const next = await window.hakoniwa.saveCodexGatewaySettings({
       gatewayUrl,
-      token,
+      token: tokenForSave,
       preferSse,
       pollingIntervalMs
     });
-    setToken("");
+    setToken(next.credentialStates[codex?.credentialRefs.token?.id ?? ""] === "configured" ? MASKED_TOKEN_VALUE : "");
     props.setSnapshot(next);
     props.setNotice(
       requiresTokenReentry
@@ -372,10 +391,14 @@ function SettingsPanel(props: {
           <input
             value={token}
             type="password"
+            onFocus={() => {
+              if (tokenIsMasked) setToken("");
+            }}
             onChange={(event) => setToken(event.target.value)}
             placeholder={credentialState === "configured" ? "Configured for this session" : "Missing"}
           />
         </label>
+        <div className="help-box">{tokenStatusMessage}</div>
         <div className="setting-row">
           <label className="check-row">
             <input
@@ -398,8 +421,14 @@ function SettingsPanel(props: {
           <button onClick={checkHealth}>Health check</button>
         </div>
         <div className={health?.status === "error" ? "error-box" : "status-box"}>
-          <strong>Connection</strong>
+          <strong>Gateway health</strong>
           <span>{health ? `${health.status}: ${health.message}` : "Not checked yet."}</span>
+          {health?.status === "connected" ? (
+            <span>
+              Repo targets loaded: {props.targets.length}. If this remains 0, the Gateway is reachable
+              but repo access or /v1/repos may still need attention.
+            </span>
+          ) : null}
         </div>
       </div>
 
