@@ -1,0 +1,9 @@
+node_modules/
+dist/
+release/
+.serena/
+.DS_Store
+.env
+.env.*
+!.env.example
+npm-debug.log*
