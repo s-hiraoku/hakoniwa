@@ -20,7 +20,15 @@ function App() {
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? tasks[0];
 
   useEffect(() => {
-    void window.hakoniwa.getProviderSnapshot().then(setSnapshot);
+    if (!window.hakoniwa) {
+      setNotice("Hakoniwa preload bridge is unavailable. Restart the app after rebuilding.");
+      return;
+    }
+
+    void window.hakoniwa.getProviderSnapshot().then(setSnapshot).catch((error: unknown) => {
+      setNotice(error instanceof Error ? error.message : "Provider snapshot failed.");
+    });
+
     const offTaskEvent = window.hakoniwa.onTaskEvent((event) => {
       setTasks((current) =>
         current.map((task) =>
@@ -46,6 +54,10 @@ function App() {
   }, []);
 
   async function refreshTargets() {
+    if (!window.hakoniwa) {
+      setNotice("Hakoniwa preload bridge is unavailable.");
+      return;
+    }
     try {
       const repos = await window.hakoniwa.listTargets(CODEX_GATEWAY_PROVIDER_ID);
       setTargets(repos);
@@ -56,6 +68,10 @@ function App() {
   }
 
   async function addTask(task: AgentTaskDetail) {
+    if (!window.hakoniwa) {
+      setNotice("Hakoniwa preload bridge is unavailable.");
+      return;
+    }
     setTasks((current) => [task, ...current.filter((item) => item.id !== task.id)]);
     setSelectedTaskId(task.id);
     await window.hakoniwa.subscribeTask(task.id);
@@ -296,6 +312,10 @@ function SettingsPanel(props: {
   const requiresTokenReentry = gatewayUrlChanged && credentialState === "configured" && !token.trim();
 
   async function save() {
+    if (!window.hakoniwa) {
+      props.setNotice("Hakoniwa preload bridge is unavailable.");
+      return;
+    }
     const next = await window.hakoniwa.saveCodexGatewaySettings({
       gatewayUrl,
       token,
@@ -312,6 +332,10 @@ function SettingsPanel(props: {
   }
 
   async function checkHealth() {
+    if (!window.hakoniwa) {
+      props.setNotice("Hakoniwa preload bridge is unavailable.");
+      return;
+    }
     try {
       const health = await window.hakoniwa.checkProviderHealth(CODEX_GATEWAY_PROVIDER_ID);
       props.setSnapshot(await window.hakoniwa.getProviderSnapshot());
@@ -415,6 +439,10 @@ function TaskComposer(props: {
   }, [props.targets, repoId]);
 
   async function submit() {
+    if (!window.hakoniwa) {
+      props.setNotice("Hakoniwa preload bridge is unavailable.");
+      return;
+    }
     if (!repoId || !prompt.trim()) {
       props.setNotice("Select a repository and enter a task prompt.");
       return;

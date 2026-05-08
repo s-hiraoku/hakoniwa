@@ -28,11 +28,34 @@ function createMainWindow(): void {
     }
   });
 
+  attachWindowDiagnostics(mainWindow);
+
   if (isDev && process.env.VITE_DEV_SERVER_URL) {
     void mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
     void mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
+}
+
+function attachWindowDiagnostics(window: BrowserWindow): void {
+  window.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedUrl) => {
+    console.error(
+      `[hakoniwa] renderer load failed: ${errorCode} ${errorDescription} ${validatedUrl}`
+    );
+  });
+
+  window.webContents.on("render-process-gone", (_event, details) => {
+    console.error(`[hakoniwa] renderer process gone: ${details.reason} ${details.exitCode}`);
+  });
+
+  window.webContents.on("preload-error", (_event, preloadPath, error) => {
+    console.error(`[hakoniwa] preload failed: ${preloadPath}: ${error.message}`);
+  });
+
+  window.webContents.on("console-message", (_event, level, message, line, sourceId) => {
+    const label = ["verbose", "info", "warning", "error"][level] ?? "log";
+    console.log(`[hakoniwa:renderer:${label}] ${sourceId}:${line} ${message}`);
+  });
 }
 
 app.whenReady().then(() => {
