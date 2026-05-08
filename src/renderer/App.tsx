@@ -307,14 +307,15 @@ function SettingsPanel(props: {
   const credentialState = codex?.credentialRefs.token
     ? props.snapshot?.credentialStates[codex.credentialRefs.token.id]
     : "missing";
+  const health = props.snapshot?.health[CODEX_GATEWAY_PROVIDER_ID];
   const savedGatewayUrl = String(codex?.settings.gatewayUrl ?? "");
   const gatewayUrlChanged = Boolean(savedGatewayUrl && savedGatewayUrl !== gatewayUrl);
   const requiresTokenReentry = gatewayUrlChanged && credentialState === "configured" && !token.trim();
 
-  async function save() {
+  async function saveSettings() {
     if (!window.hakoniwa) {
       props.setNotice("Hakoniwa preload bridge is unavailable.");
-      return;
+      return undefined;
     }
     const next = await window.hakoniwa.saveCodexGatewaySettings({
       gatewayUrl,
@@ -329,6 +330,11 @@ function SettingsPanel(props: {
         ? "Gateway URL changed; re-enter the token before connecting."
         : "Codex Gateway settings saved for this session."
     );
+    return next;
+  }
+
+  async function save() {
+    await saveSettings();
   }
 
   async function checkHealth() {
@@ -337,6 +343,7 @@ function SettingsPanel(props: {
       return;
     }
     try {
+      await saveSettings();
       const health = await window.hakoniwa.checkProviderHealth(CODEX_GATEWAY_PROVIDER_ID);
       props.setSnapshot(await window.hakoniwa.getProviderSnapshot());
       props.setNotice(health.message);
@@ -389,7 +396,11 @@ function SettingsPanel(props: {
         </div>
         <div className="button-row">
           <button onClick={save}>Save</button>
-          <button onClick={checkHealth}>Health check</button>
+          <button onClick={checkHealth}>Save & health check</button>
+        </div>
+        <div className={health?.status === "error" ? "error-box" : "status-box"}>
+          <strong>Connection</strong>
+          <span>{health ? `${health.status}: ${health.message}` : "Not checked yet."}</span>
         </div>
       </div>
 

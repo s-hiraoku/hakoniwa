@@ -298,6 +298,21 @@ p {
   padding: 9px;
 }
 
+.status-box {
+  display: grid;
+  gap: 3px;
+  border: 1px solid #bad0bf;
+  color: #244d39;
+  background: #eef7ef;
+  border-radius: 6px;
+  padding: 9px;
+}
+
+.status-box span,
+.error-box span {
+  font-size: 12px;
+}
+
 .warning-box {
   border: 1px solid #b89b3b;
   color: #60480f;
