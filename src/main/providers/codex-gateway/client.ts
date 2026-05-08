@@ -3,15 +3,18 @@ import { z } from "zod";
 export interface CodexGatewayClientOptions {
   baseUrl: string;
   token?: string;
+  timeoutMs?: number;
 }
 
 export class CodexGatewayClient {
   private readonly baseUrl: string;
   private readonly token?: string;
+  private readonly timeoutMs: number;
 
   constructor(options: CodexGatewayClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.token = options.token;
+    this.timeoutMs = options.timeoutMs ?? 10_000;
   }
 
   async health(): Promise<CodexGatewayHealth> {
@@ -46,7 +49,10 @@ export class CodexGatewayClient {
       signal
     });
     if (!response.ok || !response.body) {
-      throw new CodexGatewayError(response.status, sanitizeGatewayError(response.status));
+      throw new CodexGatewayError(
+        response.status,
+        sanitizeGatewayError(response.status, await parseErrorBody(response))
+      );
     }
     return response.body;
   }
@@ -56,17 +62,28 @@ export class CodexGatewayClient {
       throw new CodexGatewayError(0, "Codex Gateway URL is not configured.");
     }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
     const response = await fetch(`${this.baseUrl}${path}`, {
       ...init,
+      signal: init.signal ?? controller.signal,
       headers: {
         ...this.headers(),
         "Content-Type": "application/json",
         ...init.headers
       }
-    });
+    }).catch((error: unknown) => {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new CodexGatewayError(0, "Codex Gateway request timed out.");
+      }
+      throw error;
+    }).finally(() => clearTimeout(timeout));
 
     if (!response.ok) {
-      throw new CodexGatewayError(response.status, sanitizeGatewayError(response.status));
+      throw new CodexGatewayError(
+        response.status,
+        sanitizeGatewayError(response.status, await parseErrorBody(response))
+      );
     }
 
     if (response.status === 204) {
@@ -95,17 +112,57 @@ export class CodexGatewayError extends Error {
   }
 }
 
-function sanitizeGatewayError(status: number): string {
+function sanitizeGatewayError(status: number, body?: GatewayErrorBody): string {
+  const details = formatGatewayErrorDetails(status, body);
   if (status === 401 || status === 403) {
-    return "Codex Gateway rejected the credentials.";
+    return `Codex Gateway rejected the credentials or token scope.${details}`;
   }
   if (status === 404) {
-    return "Codex Gateway endpoint is unavailable.";
+    return `Codex Gateway endpoint is unavailable.${details}`;
   }
   if (status >= 500) {
-    return "Codex Gateway returned a server error.";
+    return `Codex Gateway returned a server error.${details}`;
   }
-  return "Codex Gateway request failed.";
+  return `Codex Gateway request failed.${details}`;
+}
+
+interface GatewayErrorBody {
+  code?: string;
+  message?: string;
+}
+
+async function parseErrorBody(response: Response): Promise<GatewayErrorBody | undefined> {
+  try {
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.includes("application/json")) return undefined;
+    const body = await response.json() as {
+      code?: unknown;
+      message?: unknown;
+      error?: {
+        code?: unknown;
+        message?: unknown;
+      };
+    };
+    const code = body.error?.code ?? body.code;
+    const message = body.error?.message ?? body.message;
+    return {
+      code: typeof code === "string" ? code : undefined,
+      message: typeof message === "string" ? redactSecretLikeText(message) : undefined
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function formatGatewayErrorDetails(status: number, body?: GatewayErrorBody): string {
+  const parts = [`HTTP ${status}`];
+  if (body?.code) parts.push(body.code);
+  if (body?.message) parts.push(body.message);
+  return ` (${parts.join(": ")})`;
+}
+
+function redactSecretLikeText(value: string): string {
+  return value.replace(/bearer\s+[A-Za-z0-9._~+/=-]+/gi, "Bearer [redacted]");
 }
 
 const healthSchema = z.union([

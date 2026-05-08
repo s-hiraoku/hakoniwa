@@ -15,6 +15,7 @@ const MASKED_TOKEN_VALUE = "••••••••";
 function App() {
   const [snapshot, setSnapshot] = useState<ProviderSnapshot>();
   const [targets, setTargets] = useState<ProviderTarget[]>([]);
+  const [targetError, setTargetError] = useState<string>();
   const [tasks, setTasks] = useState<AgentTaskDetail[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string>();
   const [notice, setNotice] = useState<string>("Configure Codex Gateway to start supervising tasks.");
@@ -62,9 +63,13 @@ function App() {
     try {
       const repos = await window.hakoniwa.listTargets(CODEX_GATEWAY_PROVIDER_ID);
       setTargets(repos);
+      setTargetError(undefined);
       setNotice(repos.length ? "Repository targets loaded from Codex Gateway." : "No repositories returned.");
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Repository list failed.");
+      const message = error instanceof Error ? error.message : "Repository list failed.";
+      setTargets([]);
+      setTargetError(message);
+      setNotice(message);
     }
   }
 
@@ -83,6 +88,7 @@ function App() {
       <Sidebar
         snapshot={snapshot}
         targets={targets}
+        targetError={targetError}
         tasks={tasks}
         selectedTaskId={selectedTask?.id}
         onSelectTask={setSelectedTaskId}
@@ -96,6 +102,7 @@ function App() {
             snapshot={snapshot}
             setSnapshot={setSnapshot}
             targets={targets}
+            targetError={targetError}
             onRefreshTargets={refreshTargets}
             onTaskCreated={addTask}
             setNotice={setNotice}
@@ -110,6 +117,7 @@ function App() {
 function Sidebar(props: {
   snapshot?: ProviderSnapshot;
   targets: ProviderTarget[];
+  targetError?: string;
   tasks: AgentTaskDetail[];
   selectedTaskId?: string;
   onSelectTask(taskId: string): void;
@@ -132,7 +140,12 @@ function Sidebar(props: {
           <button onClick={props.onRefreshTargets}>Refresh</button>
         </div>
         <div className="stack">
-          {props.targets.length === 0 ? (
+          {props.targetError ? (
+            <div className="error-box">
+              <strong>Repo load failed</strong>
+              <span>{props.targetError}</span>
+            </div>
+          ) : props.targets.length === 0 ? (
             <p className="muted">No Gateway repositories loaded.</p>
           ) : (
             props.targets.map((target) => (
@@ -261,6 +274,7 @@ function RightRail(props: {
   snapshot?: ProviderSnapshot;
   setSnapshot(snapshot: ProviderSnapshot): void;
   targets: ProviderTarget[];
+  targetError?: string;
   onRefreshTargets(): Promise<void>;
   onTaskCreated(task: AgentTaskDetail): Promise<void>;
   setNotice(message: string): void;
@@ -289,6 +303,7 @@ function SettingsPanel(props: {
   snapshot?: ProviderSnapshot;
   setSnapshot(snapshot: ProviderSnapshot): void;
   targets: ProviderTarget[];
+  targetError?: string;
   onRefreshTargets(): Promise<void>;
   setNotice(message: string): void;
 }) {
@@ -297,6 +312,7 @@ function SettingsPanel(props: {
   const [token, setToken] = useState("");
   const [preferSse, setPreferSse] = useState(true);
   const [pollingIntervalMs, setPollingIntervalMs] = useState(3000);
+  const [healthChecking, setHealthChecking] = useState(false);
 
   useEffect(() => {
     if (codex) {
@@ -361,14 +377,25 @@ function SettingsPanel(props: {
       props.setNotice("Hakoniwa preload bridge is unavailable.");
       return;
     }
+    setHealthChecking(true);
+    props.setNotice("Checking Codex Gateway health...");
     try {
       const health = await window.hakoniwa.checkProviderHealth(CODEX_GATEWAY_PROVIDER_ID);
-      props.setSnapshot(await window.hakoniwa.getProviderSnapshot());
+      const nextSnapshot = await window.hakoniwa.getProviderSnapshot();
+      props.setSnapshot({
+        ...nextSnapshot,
+        health: {
+          ...nextSnapshot.health,
+          [CODEX_GATEWAY_PROVIDER_ID]: health
+        }
+      });
       props.setNotice(health.message);
       if (health.status === "connected") await props.onRefreshTargets();
     } catch (error) {
-      props.setNotice(error instanceof Error ? error.message : "Health check failed.");
+      const message = error instanceof Error ? error.message : "Health check failed.";
+      props.setNotice(message);
     }
+    setHealthChecking(false);
   }
 
   return (
@@ -422,13 +449,17 @@ function SettingsPanel(props: {
         </div>
         <div className={health?.status === "error" ? "error-box" : "status-box"}>
           <strong>Gateway health</strong>
-          <span>{health ? `${health.status}: ${health.message}` : "Not checked yet."}</span>
+          <span>
+            {healthChecking
+              ? "checking: waiting for Codex Gateway..."
+              : health
+                ? `${health.status}: ${health.message}`
+                : "Not checked yet."}
+          </span>
           {health?.status === "connected" ? (
-            <span>
-              Repo targets loaded: {props.targets.length}. If this remains 0, the Gateway is reachable
-              but repo access or /v1/repos may still need attention.
-            </span>
+            <span>Repo targets loaded: {props.targets.length}.</span>
           ) : null}
+          {props.targetError ? <span>Repo access: {props.targetError}</span> : null}
         </div>
       </div>
 
