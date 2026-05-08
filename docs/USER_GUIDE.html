@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hakoniwa User Guide</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page doc">
+      <nav class="top-nav" aria-label="Breadcrumb">
+        <a href="./index.html">Hakoniwa Guide</a>
+        <a href="https://github.com/s-hiraoku/hakoniwa">Repository</a>
+      </nav>
+
+      <h1>Hakoniwa User Guide</h1>
+      <p class="lead">
+        Hakoniwa is an independent desktop app for supervising AI development
+        tasks. The D1 build focuses on a clean path from Codex Gateway
+        configuration to task monitoring.
+      </p>
+
+      <section id="quick-start">
+        <h2>Quick Start</h2>
+        <p>Requirements: Node.js, npm, and a running Codex Gateway.</p>
+        <pre><code>npm install
+npm run dev</code></pre>
+        <p>
+          The app opens as an Electron desktop window. The development command
+          builds the main/preload process first, starts the Vite renderer, and
+          launches Electron.
+        </p>
+      </section>
+
+      <section id="codex-gateway">
+        <h2>Codex Gateway</h2>
+        <p>
+          Hakoniwa treats Codex Gateway as an Agent Backend Provider. The
+          default Gateway URL is:
+        </p>
+        <pre><code>http://127.0.0.1:8787</code></pre>
+        <ol>
+          <li>Enter the Gateway URL.</li>
+          <li>Enter the Gateway token if required.</li>
+          <li>Keep Prefer SSE events enabled unless unsupported.</li>
+          <li>Click Save.</li>
+          <li>Click Health check.</li>
+        </ol>
+        <pre><code>CODEX_GATEWAY_URL=http://127.0.0.1:8787 CODEX_GATEWAY_TOKEN=... npm run dev</code></pre>
+        <p>
+          Secrets stay in Electron main process session memory. If the Gateway
+          URL changes without a new token, Hakoniwa clears the previous token.
+        </p>
+      </section>
+
+      <section id="load-repositories">
+        <h2>Load Repositories</h2>
+        <p>After health check succeeds, Hakoniwa loads repo targets from:</p>
+        <pre><code>GET /v1/repos</code></pre>
+        <p>
+          The left panel shows repo display name, default mode, allowed modes,
+          provider, and connection status. D1 does not display or send raw
+          absolute worktree paths.
+        </p>
+      </section>
+
+      <section id="create-a-task">
+        <h2>Create A Task</h2>
+        <ol>
+          <li>Select a repository.</li>
+          <li>Choose read-only or workspace-write.</li>
+          <li>Enter a prompt.</li>
+          <li>Click Create task.</li>
+        </ol>
+        <pre><code>{
+  "repo": "repo-id",
+  "prompt": "task prompt",
+  "mode": "read-only"
+}</code></pre>
+      </section>
+
+      <section id="monitor-a-task">
+        <h2>Monitor A Task</h2>
+        <p>
+          Task detail shows prompt, provider, repo, mode, status, summary,
+          changed files, timeline, and error state.
+        </p>
+        <p>
+          Hakoniwa prefers <code>GET /v1/tasks/:id/events</code>. If events are
+          unavailable, fail, or close before the task reaches a terminal state,
+          Hakoniwa polls <code>GET /v1/tasks/:id</code>.
+        </p>
+      </section>
+
+      <section id="current-limits">
+        <h2>Current Limits</h2>
+        <ul>
+          <li>managed worktrees</li>
+          <li>full terminal</li>
+          <li>full browser preview</li>
+          <li>full diff viewer</li>
+          <li>approval center</li>
+          <li>OpenCode provider</li>
+          <li>Direct API Agent</li>
+          <li>direct model provider execution</li>
+        </ul>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>Troubleshooting</h2>
+        <dl>
+          <dt>Gateway URL not configured</dt>
+          <dd>Use <code>http://127.0.0.1:8787</code> or your actual Gateway URL.</dd>
+          <dt>Unauthorized</dt>
+          <dd>Re-enter the Gateway token.</dd>
+          <dt>No repos returned</dt>
+          <dd>Confirm Codex Gateway supports <code>GET /v1/repos</code>.</dd>
+          <dt>Task timeline stops</dt>
+          <dd>Reload the app and run a health check again.</dd>
+        </dl>
+      </section>
+    </main>
+  </body>
+</html>

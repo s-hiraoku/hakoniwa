@@ -12,6 +12,11 @@ npm install
 npm run dev
 ```
 
+User guide:
+
+- GitHub Pages entry: `docs/index.html`
+- Markdown guide: [docs/USER_GUIDE.md](docs/USER_GUIDE.md)
+
 Useful checks:
 
 ```bash
