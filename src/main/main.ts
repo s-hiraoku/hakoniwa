@@ -24,7 +24,7 @@ function createMainWindow(): void {
       preload: join(__dirname, "../preload/preload.cjs"),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: true
+      sandbox: false
     }
   });
 

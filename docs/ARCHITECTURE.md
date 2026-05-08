@@ -14,7 +14,7 @@ Electron security defaults:
 
 - `nodeIntegration: false`
 - `contextIsolation: true`
-- `sandbox: true`
+- `sandbox: false` for the main app window preload bridge until the bridge is migrated to a fully sandbox-compatible preload format
 - explicit IPC channels only
 
 ## D1 Modules
