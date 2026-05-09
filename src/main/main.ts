@@ -12,6 +12,8 @@ const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 let mainWindow: BrowserWindow | undefined;
 const providerRuntime = new ProviderRuntime(() => mainWindow);
 
+app.setName("Hakoniwa");
+
 function createMainWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1440,
@@ -21,6 +23,7 @@ function createMainWindow(): void {
     title: "Hakoniwa",
     acceptFirstMouse: true,
     focusable: true,
+    show: false,
     backgroundColor: "#f7f6f1",
     webPreferences: {
       preload: join(__dirname, "../preload/preload.cjs"),
@@ -31,12 +34,23 @@ function createMainWindow(): void {
   });
 
   attachWindowDiagnostics(mainWindow);
+  mainWindow.once("ready-to-show", () => {
+    focusMainWindow();
+  });
 
   if (isDev && process.env.VITE_DEV_SERVER_URL) {
     void mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
     void mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
+}
+
+function focusMainWindow(): void {
+  if (process.platform === "darwin") {
+    app.focus({ steal: true });
+  }
+  mainWindow?.show();
+  mainWindow?.focus();
 }
 
 function attachWindowDiagnostics(window: BrowserWindow): void {
@@ -61,11 +75,18 @@ function attachWindowDiagnostics(window: BrowserWindow): void {
 }
 
 app.whenReady().then(() => {
+  if (process.platform === "darwin") {
+    app.setActivationPolicy("regular");
+  }
   registerIpcHandlers();
   createMainWindow();
 
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createMainWindow();
+      return;
+    }
+    focusMainWindow();
   });
 });
 
