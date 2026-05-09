@@ -37,7 +37,11 @@ Optional endpoint:
 
 Hakoniwa prefers Gateway events when available. Because Authorization headers may be required, the SSE request is made in the main process, not with renderer `EventSource`.
 
-If `/events` is unavailable, fails, or closes before the task reaches a terminal state, Hakoniwa falls back to polling `GET /v1/tasks/:id` and emits synthetic `polling.updated` timeline events.
+Codex Gateway's current event endpoint may replay the events available at request time and then close. Hakoniwa reconnects with `Last-Event-ID` so it can keep collecting normalized events until the task reaches a terminal state.
+
+`agent.message.completed` payloads are normalized into Hakoniwa timeline messages and the task detail Agent Response panel. If the Gateway only reports status, the UI shows that no final response has been reported yet.
+
+If `/events` is unavailable or fails, Hakoniwa falls back to polling `GET /v1/tasks/:id` and emits synthetic `polling.updated` timeline events.
 
 Polling also sends sanitized task snapshots to the renderer so status, summary, changed files, and error state stay current. Polling stops when a task reaches `completed`, `failed`, or `cancelled`.
 

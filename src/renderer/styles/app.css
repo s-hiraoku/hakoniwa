@@ -273,11 +273,22 @@ p {
 }
 
 .info-tile,
+.agent-response,
 .review-band {
   padding: 12px;
   border: 1px solid #d8d0be;
   border-radius: 8px;
   background: #f7f4ed;
+}
+
+.agent-response {
+  margin-bottom: 12px;
+}
+
+.response-text {
+  margin-top: 6px;
+  white-space: pre-wrap;
+  line-height: 1.5;
 }
 
 .review-band {

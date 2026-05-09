@@ -90,12 +90,16 @@ npm run dev</code></pre>
       <section id="monitor-a-task">
         <h2>Monitor A Task</h2>
         <p>
-          Task detail shows prompt, provider, repo, mode, status, summary,
-          changed files, timeline, and error state.
+          Task detail shows prompt, provider, repo, mode, status, agent
+          response when reported by the Gateway, summary, changed files,
+          timeline, and error state.
         </p>
         <p>
-          Hakoniwa prefers <code>GET /v1/tasks/:id/events</code>. If events are
-          unavailable, fail, or close before the task reaches a terminal state,
+          Hakoniwa prefers <code>GET /v1/tasks/:id/events</code>. Gateway
+          <code>agent.message.completed</code> events are shown in the Agent
+          Response panel and timeline. If the event endpoint closes after
+          replaying current events, Hakoniwa reconnects with
+          <code>Last-Event-ID</code>. If events are unavailable or fail,
           Hakoniwa polls <code>GET /v1/tasks/:id</code>.
         </p>
       </section>

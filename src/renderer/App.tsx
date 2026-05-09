@@ -255,6 +255,8 @@ function TaskWorkspace({ task }: { task?: AgentTaskDetail }) {
     );
   }
 
+  const agentResponse = agentResponseText(task);
+
   return (
     <section className="task-workspace">
       <div className="task-header">
@@ -271,6 +273,15 @@ function TaskWorkspace({ task }: { task?: AgentTaskDetail }) {
         <InfoTile label="Mode" value={task.mode} />
         <InfoTile label="Changed files" value={String(task.changedFiles.length)} />
       </div>
+
+      <section className="agent-response">
+        <div>
+          <h3>Agent Response</h3>
+          <p className={agentResponse ? "response-text" : "muted"}>
+            {agentResponse ?? "No final response has been reported by the Gateway yet."}
+          </p>
+        </div>
+      </section>
 
       <section className="review-band">
         <div>
@@ -680,6 +691,14 @@ function mergeTaskForRenderer(previous: AgentTaskDetail, next: AgentTaskDetail):
     ...next,
     events: [...next.events, ...localEvents].sort((a, b) => a.createdAt.localeCompare(b.createdAt))
   };
+}
+
+function agentResponseText(task: AgentTaskDetail): string | undefined {
+  const completedMessage = [...task.events]
+    .reverse()
+    .find((event) => event.type === "agent.message.completed" && event.message.trim());
+  if (completedMessage) return completedMessage.message;
+  return task.summary?.trim() || undefined;
 }
 
 function uiErrorMessage(error: unknown, fallback: string): string {

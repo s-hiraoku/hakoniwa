@@ -87,12 +87,15 @@ Task detail shows:
 - repo
 - mode
 - status
+- agent response, when the Gateway reports one
 - summary
 - changed files
 - timeline
 - error state
 
-Hakoniwa prefers `GET /v1/tasks/:id/events` when available. If events are unavailable, fail, or close before the task reaches a terminal state, Hakoniwa polls:
+Hakoniwa prefers `GET /v1/tasks/:id/events` when available. Gateway `agent.message.completed` events are shown in the Agent Response panel and in the timeline. If the event endpoint closes after replaying current events, Hakoniwa reconnects with `Last-Event-ID`.
+
+If events are unavailable or fail, Hakoniwa polls:
 
 ```text
 GET /v1/tasks/:id

@@ -43,9 +43,13 @@ export class CodexGatewayClient {
     return taskSchema.parse(await this.request(`/v1/tasks/${encodeURIComponent(taskId)}`));
   }
 
-  async taskEvents(taskId: string, signal: AbortSignal): Promise<ReadableStream<Uint8Array>> {
+  async taskEvents(taskId: string, signal: AbortSignal, lastEventId?: string): Promise<ReadableStream<Uint8Array>> {
     const response = await fetch(`${this.baseUrl}/v1/tasks/${encodeURIComponent(taskId)}/events`, {
-      headers: this.headers(),
+      headers: {
+        ...this.headers(),
+        Accept: "text/event-stream",
+        ...(lastEventId ? { "Last-Event-ID": lastEventId } : {})
+      },
       signal
     });
     if (!response.ok || !response.body) {
