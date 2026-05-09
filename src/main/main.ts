@@ -7,7 +7,10 @@ import type { CreateAgentTaskInput } from "../shared/providers.js";
 import { ProviderRuntime } from "./providerRuntime.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
+const devServerUrl =
+  process.env.VITE_DEV_SERVER_URL ||
+  app.commandLine.getSwitchValue("hakoniwa-dev-server-url");
+const isDev = Boolean(devServerUrl);
 
 let mainWindow: BrowserWindow | undefined;
 const providerRuntime = new ProviderRuntime(() => mainWindow);
@@ -38,8 +41,8 @@ function createMainWindow(): void {
     focusMainWindow();
   });
 
-  if (isDev && process.env.VITE_DEV_SERVER_URL) {
-    void mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+  if (isDev && devServerUrl) {
+    void mainWindow.loadURL(devServerUrl);
   } else {
     void mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }

@@ -12,10 +12,11 @@ npm install
 npm run dev
 ```
 
-`npm run dev` starts the Vite renderer but launches the packaged
-`release/mac-arm64/Hakoniwa.app` shell so macOS focuses Hakoniwa with its own
-bundle id. Avoid using the browser preview at `http://127.0.0.1:5173` for
-Gateway settings because it cannot access the Electron preload bridge.
+`npm run dev` starts the Vite renderer but launches
+`release/mac-arm64/Hakoniwa.app` through macOS LaunchServices so Hakoniwa
+receives normal app focus with its own bundle id. Avoid using the browser
+preview at `http://127.0.0.1:5173` for Gateway settings because it cannot
+access the Electron preload bridge.
 
 User guide:
 

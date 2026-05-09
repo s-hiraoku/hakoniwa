@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/main/main.js",
   "scripts": {
-    "dev": "npm run build:dev-shell && concurrently -k \"npm run dev:renderer\" \"npm run dev:main:watch\" \"npm run dev:preload:watch\" \"wait-on http://127.0.0.1:5173 release/mac-arm64/Hakoniwa.app/Contents/MacOS/Hakoniwa && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 release/mac-arm64/Hakoniwa.app/Contents/MacOS/Hakoniwa\"",
+    "dev": "npm run build:dev-shell && concurrently -k \"npm run dev:renderer\" \"npm run dev:main:watch\" \"npm run dev:preload:watch\" \"wait-on http://127.0.0.1:5173 release/mac-arm64/Hakoniwa.app && open -n -W release/mac-arm64/Hakoniwa.app --args --hakoniwa-dev-server-url=http://127.0.0.1:5173\"",
     "dev:electron": "npm run build:main && concurrently -k \"npm run dev:renderer\" \"npm run dev:main:watch\" \"npm run dev:preload:watch\" \"wait-on http://127.0.0.1:5173 dist/main/main.js dist/preload/preload.cjs && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
     "build:dev-shell": "tsc && npm run build:preload && vite build && electron-builder --dir",
     "build:main": "tsc && npm run build:preload",

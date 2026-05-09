@@ -28,8 +28,9 @@ npm run dev</code></pre>
         <p>
           The app opens as a Hakoniwa desktop window. The development command
           builds a local <code>release/mac-arm64/Hakoniwa.app</code> shell,
-          starts the Vite renderer, and launches that app with
-          <code>VITE_DEV_SERVER_URL</code>.
+          starts the Vite renderer, and launches that app through macOS
+          LaunchServices with a <code>--hakoniwa-dev-server-url</code>
+          argument.
         </p>
         <p>
           Use the Hakoniwa window for Gateway settings and task creation. The
