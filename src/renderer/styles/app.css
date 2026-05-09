@@ -51,6 +51,32 @@ textarea {
   resize: vertical;
 }
 
+.bridge-screen {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.bridge-screen section {
+  display: grid;
+  gap: 14px;
+  width: min(560px, 100%);
+  border: 1px solid #d4ccb9;
+  border-radius: 8px;
+  background: #fffdf8;
+  padding: 22px;
+}
+
+.bridge-screen h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.bridge-screen p {
+  color: #5f574d;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);

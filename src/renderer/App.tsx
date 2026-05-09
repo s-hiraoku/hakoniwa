@@ -13,6 +13,11 @@ const CODEX_GATEWAY_PROVIDER_ID = "agent-backend.codex-gateway.default";
 const MASKED_TOKEN_VALUE = "••••••••";
 
 function App() {
+  return window.hakoniwa ? <HakoniwaApp /> : <BridgeUnavailable />;
+}
+
+function HakoniwaApp() {
+  const hakoniwa = window.hakoniwa!;
   const [snapshot, setSnapshot] = useState<ProviderSnapshot>();
   const [targets, setTargets] = useState<ProviderTarget[]>([]);
   const [targetError, setTargetError] = useState<string>();
@@ -22,16 +27,11 @@ function App() {
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? tasks[0];
 
   useEffect(() => {
-    if (!window.hakoniwa) {
-      setNotice("Hakoniwa preload bridge is unavailable. Restart the app after rebuilding.");
-      return;
-    }
-
-    void window.hakoniwa.getProviderSnapshot().then(setSnapshot).catch((error: unknown) => {
-      setNotice(error instanceof Error ? error.message : "Provider snapshot failed.");
+    void hakoniwa.getProviderSnapshot().then(setSnapshot).catch((error: unknown) => {
+      setNotice(uiErrorMessage(error, "Provider snapshot failed."));
     });
 
-    const offTaskEvent = window.hakoniwa.onTaskEvent((event) => {
+    const offTaskEvent = hakoniwa.onTaskEvent((event) => {
       setTasks((current) =>
         current.map((task) =>
           task.id === event.taskId
@@ -40,7 +40,7 @@ function App() {
         )
       );
     });
-    const offTaskUpdated = window.hakoniwa.onTaskUpdated((updatedTask) => {
+    const offTaskUpdated = hakoniwa.onTaskUpdated((updatedTask) => {
       setTasks((current) =>
         current.map((task) =>
           task.id === updatedTask.id
@@ -53,20 +53,16 @@ function App() {
       offTaskEvent();
       offTaskUpdated();
     };
-  }, []);
+  }, [hakoniwa]);
 
   async function refreshTargets() {
-    if (!window.hakoniwa) {
-      setNotice("Hakoniwa preload bridge is unavailable.");
-      return;
-    }
     try {
-      const repos = await window.hakoniwa.listTargets(CODEX_GATEWAY_PROVIDER_ID);
+      const repos = await hakoniwa.listTargets(CODEX_GATEWAY_PROVIDER_ID);
       setTargets(repos);
       setTargetError(undefined);
       setNotice(repos.length ? "Repository targets loaded from Codex Gateway." : "No repositories returned.");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Repository list failed.";
+      const message = uiErrorMessage(error, "Repository list failed.");
       setTargets([]);
       setTargetError(message);
       setNotice(message);
@@ -74,13 +70,9 @@ function App() {
   }
 
   async function addTask(task: AgentTaskDetail) {
-    if (!window.hakoniwa) {
-      setNotice("Hakoniwa preload bridge is unavailable.");
-      return;
-    }
     setTasks((current) => [task, ...current.filter((item) => item.id !== task.id)]);
     setSelectedTaskId(task.id);
-    await window.hakoniwa.subscribeTask(task.id);
+    await hakoniwa.subscribeTask(task.id);
   }
 
   return (
@@ -110,6 +102,27 @@ function App() {
         </section>
         <TerminalDock task={selectedTask} />
       </main>
+    </div>
+  );
+}
+
+function BridgeUnavailable() {
+  return (
+    <div className="bridge-screen">
+      <section>
+        <div className="brand-mark">H</div>
+        <h1>Hakoniwa requires the Electron app shell</h1>
+        <p>
+          This renderer is open without the preload bridge, which usually means it is running in a
+          browser or web preview. Gateway settings, credentials, and health checks only work inside
+          the Hakoniwa Electron window.
+        </p>
+        <div className="status-box">
+          <strong>How to open it</strong>
+          <span>Run npm run dev and use the separate window titled Hakoniwa.</span>
+          <span>Do not use http://127.0.0.1:5173 for Gateway checks.</span>
+        </div>
+      </section>
     </div>
   );
 }
@@ -406,7 +419,7 @@ function SettingsPanel(props: {
       props.setNotice(health.message);
       if (health.status === "connected") await props.onRefreshTargets();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Health check failed.";
+      const message = uiErrorMessage(error, "Health check failed.");
       setLocalHealth({
         status: "error",
         message,
@@ -549,7 +562,7 @@ function TaskComposer(props: {
       await props.onTaskCreated(task);
       props.setNotice("Task created and monitoring started.");
     } catch (error) {
-      props.setNotice(error instanceof Error ? error.message : "Task creation failed.");
+      props.setNotice(uiErrorMessage(error, "Task creation failed."));
     }
   }
 
@@ -647,6 +660,13 @@ function mergeTaskForRenderer(previous: AgentTaskDetail, next: AgentTaskDetail):
     ...next,
     events: [...next.events, ...localEvents].sort((a, b) => a.createdAt.localeCompare(b.createdAt))
   };
+}
+
+function uiErrorMessage(error: unknown, fallback: string): string {
+  const raw = error instanceof Error ? error.message : fallback;
+  return raw
+    .replace(/^Error invoking remote method '[^']+':\s*/, "")
+    .replace(/^CodexGatewayError:\s*/, "");
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
