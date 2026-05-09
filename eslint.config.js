@@ -16,6 +16,17 @@ export default tseslint.config(
     }
   },
   {
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        clearInterval: "readonly",
+        console: "readonly",
+        process: "readonly",
+        setInterval: "readonly"
+      }
+    }
+  },
+  {
     ignores: ["dist", "release", "node_modules"]
   }
 );
