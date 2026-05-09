@@ -26,9 +26,16 @@
         <pre><code>npm install
 npm run dev</code></pre>
         <p>
-          The app opens as an Electron desktop window. The development command
-          builds the main/preload process first, starts the Vite renderer, and
-          launches Electron.
+          The app opens as a Hakoniwa desktop window. The development command
+          builds a local <code>release/mac-arm64/Hakoniwa.app</code> shell,
+          starts the Vite renderer, and launches that app with
+          <code>VITE_DEV_SERVER_URL</code>.
+        </p>
+        <p>
+          Use the Hakoniwa window for Gateway settings and task creation. The
+          browser preview at <code>http://127.0.0.1:5173</code> is only for
+          renderer layout checks because it cannot access the Electron preload
+          bridge.
         </p>
       </section>
 
