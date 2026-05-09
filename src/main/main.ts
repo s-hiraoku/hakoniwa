@@ -19,6 +19,8 @@ function createMainWindow(): void {
     minWidth: 1100,
     minHeight: 760,
     title: "Hakoniwa",
+    acceptFirstMouse: true,
+    focusable: true,
     backgroundColor: "#f7f6f1",
     webPreferences: {
       preload: join(__dirname, "../preload/preload.cjs"),
