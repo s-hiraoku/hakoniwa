@@ -294,12 +294,12 @@ function RightRail(props: {
 }) {
   return (
     <aside className="right-rail">
-      <SettingsPanel {...props} />
       <TaskComposer
         targets={props.targets}
         onTaskCreated={props.onTaskCreated}
         setNotice={props.setNotice}
       />
+      <SettingsPanel {...props} />
       <PlaceholderPanel
         title="Agent Panel"
         body="Provider messages, approvals, steering, and backend capability state will live here."
