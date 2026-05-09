@@ -27,6 +27,20 @@ function HakoniwaApp() {
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? tasks[0];
 
   useEffect(() => {
+    const focusEditableTarget = (event: PointerEvent) => {
+      const target = event.target;
+      if (!isEditableElement(target)) return;
+      window.requestAnimationFrame(() => {
+        target.focus();
+      });
+    };
+    document.addEventListener("pointerdown", focusEditableTarget, true);
+    return () => {
+      document.removeEventListener("pointerdown", focusEditableTarget, true);
+    };
+  }, []);
+
+  useEffect(() => {
     void hakoniwa.getProviderSnapshot().then(setSnapshot).catch((error: unknown) => {
       setNotice(uiErrorMessage(error, "Provider snapshot failed."));
     });
@@ -104,6 +118,12 @@ function HakoniwaApp() {
       </main>
     </div>
   );
+}
+
+function isEditableElement(target: EventTarget | null): target is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement {
+  return target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement;
 }
 
 function BridgeUnavailable() {

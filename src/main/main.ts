@@ -51,6 +51,7 @@ function focusMainWindow(): void {
   }
   mainWindow?.show();
   mainWindow?.focus();
+  mainWindow?.webContents.focus();
 }
 
 function attachWindowDiagnostics(window: BrowserWindow): void {
@@ -71,6 +72,10 @@ function attachWindowDiagnostics(window: BrowserWindow): void {
   window.webContents.on("console-message", (_event, level, message, line, sourceId) => {
     const label = ["verbose", "info", "warning", "error"][level] ?? "log";
     console.log(`[hakoniwa:renderer:${label}] ${sourceId}:${line} ${message}`);
+  });
+
+  window.on("focus", () => {
+    window.webContents.focus();
   });
 }
 
