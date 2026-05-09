@@ -378,10 +378,10 @@ function SettingsPanel(props: {
   const hasTokenInput = Boolean(tokenForSave?.trim());
   const requiresTokenReentry = gatewayUrlChanged && credentialState === "configured" && !hasTokenInput;
   const tokenStatusMessage = hasTokenInput
-    ? "New token will be saved in main process memory."
+    ? "New token will be saved in the local encrypted credential vault."
     : credentialState === "configured"
-      ? "Token is saved for this session."
-      : "No token is saved for this session.";
+      ? "Token is saved locally. The value is hidden."
+      : "No token is saved.";
 
   useEffect(() => {
     if (credentialState === "configured" && !token) {
@@ -408,7 +408,7 @@ function SettingsPanel(props: {
     props.setNotice(
       requiresTokenReentry
         ? "Gateway URL changed; re-enter the token before connecting."
-        : "Codex Gateway settings saved for this session."
+        : "Codex Gateway settings saved."
     );
     return next;
   }
@@ -485,7 +485,7 @@ function SettingsPanel(props: {
               if (tokenIsMasked) setToken("");
             }}
             onChange={(event) => setToken(event.target.value)}
-            placeholder={credentialState === "configured" ? "Configured for this session" : "Missing"}
+            placeholder={credentialState === "configured" ? "Configured" : "Missing"}
           />
         </label>
         <div className="help-box">{tokenStatusMessage}</div>

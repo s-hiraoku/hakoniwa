@@ -13,7 +13,7 @@ const devServerUrl =
 const isDev = Boolean(devServerUrl);
 
 let mainWindow: BrowserWindow | undefined;
-const providerRuntime = new ProviderRuntime(() => mainWindow);
+let providerRuntime: ProviderRuntime | undefined;
 
 app.setName("Hakoniwa");
 
@@ -103,30 +103,39 @@ app.on("window-all-closed", () => {
 });
 
 function registerIpcHandlers(): void {
-  ipcMain.handle(IPC_CHANNELS.getProviderSnapshot, () => providerRuntime.snapshot());
+  ipcMain.handle(IPC_CHANNELS.getProviderSnapshot, () => getProviderRuntime().snapshot());
   ipcMain.handle(
     IPC_CHANNELS.saveCodexGatewaySettings,
     (_event, input: SaveCodexGatewaySettingsInput) =>
-      providerRuntime.saveCodexGatewaySettings(saveCodexGatewaySettingsSchema.parse(input))
+      getProviderRuntime().saveCodexGatewaySettings(saveCodexGatewaySettingsSchema.parse(input))
   );
   ipcMain.handle(IPC_CHANNELS.checkProviderHealth, (_event, providerId: string) =>
-    providerRuntime.checkProviderHealth(providerIdSchema.parse(providerId))
+    getProviderRuntime().checkProviderHealth(providerIdSchema.parse(providerId))
   );
   ipcMain.handle(IPC_CHANNELS.listTargets, (_event, providerId: string) =>
-    providerRuntime.listTargets(providerIdSchema.parse(providerId))
+    getProviderRuntime().listTargets(providerIdSchema.parse(providerId))
   );
   ipcMain.handle(IPC_CHANNELS.createTask, (_event, input: CreateAgentTaskInput) =>
-    providerRuntime.createTask(createTaskInputSchema.parse(input))
+    getProviderRuntime().createTask(createTaskInputSchema.parse(input))
   );
   ipcMain.handle(IPC_CHANNELS.getTask, (_event, taskId: string) =>
-    providerRuntime.getTask(taskIdSchema.parse(taskId))
+    getProviderRuntime().getTask(taskIdSchema.parse(taskId))
   );
   ipcMain.handle(IPC_CHANNELS.subscribeTask, (_event, taskId: string) =>
-    providerRuntime.subscribeTask(taskIdSchema.parse(taskId))
+    getProviderRuntime().subscribeTask(taskIdSchema.parse(taskId))
   );
   ipcMain.handle(IPC_CHANNELS.unsubscribeTask, (_event, taskId: string) =>
-    providerRuntime.unsubscribeTask(taskIdSchema.parse(taskId))
+    getProviderRuntime().unsubscribeTask(taskIdSchema.parse(taskId))
   );
+}
+
+function getProviderRuntime(): ProviderRuntime {
+  if (!providerRuntime) {
+    providerRuntime = new ProviderRuntime(() => mainWindow, {
+      userDataPath: app.getPath("userData")
+    });
+  }
+  return providerRuntime;
 }
 
 const providerIdSchema = z.string().min(1).max(200);

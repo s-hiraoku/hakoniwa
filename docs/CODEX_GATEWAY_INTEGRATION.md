@@ -18,7 +18,7 @@ CODEX_GATEWAY_URL=http://127.0.0.1:8787
 CODEX_GATEWAY_TOKEN=...
 ```
 
-Tokens are held in main-process session memory. The renderer sees only configured/missing state. If the Gateway URL changes and no replacement token is entered, Hakoniwa clears the existing token so it cannot be sent to a different origin.
+Tokens are stored by the main process credential vault. D1 uses Electron `safeStorage` to keep an encrypted local token under the app user-data directory, with session-memory fallback only when OS encryption is unavailable. The renderer sees only configured/missing state. If the Gateway URL changes and no replacement token is entered, Hakoniwa clears the existing token so it cannot be sent to a different origin.
 
 ## Supported API
 

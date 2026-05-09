@@ -1,4 +1,6 @@
 import { BrowserWindow } from "electron";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import type {
   AgentBackendProvider,
   AgentTaskDetail,
@@ -9,7 +11,8 @@ import type {
   ProviderSnapshot
 } from "../shared/providers.js";
 import { IPC_CHANNELS } from "../shared/ipc.js";
-import { SessionCredentialVault } from "./credentials/sessionCredentialVault.js";
+import type { CredentialVault } from "./credentials/sessionCredentialVault.js";
+import { LocalCredentialVault } from "./credentials/localCredentialVault.js";
 import {
   CODEX_GATEWAY_PROVIDER_ID,
   createDefaultProviderConfigs
@@ -17,13 +20,25 @@ import {
 import { CodexGatewayProvider } from "./providers/codex-gateway/adapter.js";
 
 export class ProviderRuntime {
-  private readonly vault = new SessionCredentialVault();
-  private readonly configs = createDefaultProviderConfigs();
+  private readonly vault: CredentialVault;
+  private readonly configs: {
+    agentBackends: ProviderConfig[];
+    modelProviders: ProviderConfig[];
+  };
+  private readonly settingsPath: string;
   private readonly health = new Map<string, ProviderHealth>();
   private readonly tasks = new Map<string, AgentTaskDetail>();
   private readonly subscriptions = new Map<string, AgentTaskEventSubscription>();
 
-  constructor(private readonly getMainWindow: () => BrowserWindow | undefined) {
+  constructor(
+    private readonly getMainWindow: () => BrowserWindow | undefined,
+    options: { userDataPath: string }
+  ) {
+    this.vault = new LocalCredentialVault(join(options.userDataPath, "credentials.v1.json"));
+    this.configs = createDefaultProviderConfigs();
+    this.settingsPath = join(options.userDataPath, "provider-settings.v1.json");
+    this.applyPersistedProviderSettings();
+
     const codex = this.configs.agentBackends.find((config) => config.id === CODEX_GATEWAY_PROVIDER_ID);
     const token = process.env.CODEX_GATEWAY_TOKEN;
     if (codex?.credentialRefs.token && token) {
@@ -71,6 +86,8 @@ export class ProviderRuntime {
     } else if (tokenRef && previousGatewayUrl && previousGatewayUrl !== nextGatewayUrl) {
       await this.vault.delete(tokenRef);
     }
+
+    this.persistProviderSettings();
 
     return this.snapshot();
   }
@@ -251,6 +268,75 @@ export class ProviderRuntime {
     if (!config) throw new Error("Provider is not registered.");
     return config;
   }
+
+  private applyPersistedProviderSettings(): void {
+    const persisted = readPersistedProviderSettings(this.settingsPath);
+    const codex = this.configs.agentBackends.find((config) => config.id === CODEX_GATEWAY_PROVIDER_ID);
+    if (!codex || !persisted.codexGateway) return;
+
+    codex.settings = {
+      ...codex.settings,
+      ...persisted.codexGateway
+    };
+    codex.updatedAt = new Date().toISOString();
+  }
+
+  private persistProviderSettings(): void {
+    const codex = this.getConfig(CODEX_GATEWAY_PROVIDER_ID);
+    writePersistedProviderSettings(this.settingsPath, {
+      codexGateway: {
+        gatewayUrl: String(codex.settings.gatewayUrl ?? ""),
+        preferSse: Boolean(codex.settings.preferSse ?? true),
+        pollingIntervalMs: Number(codex.settings.pollingIntervalMs ?? 3000)
+      }
+    });
+  }
+}
+
+type PersistedProviderSettings = {
+  codexGateway?: {
+    gatewayUrl: string;
+    preferSse: boolean;
+    pollingIntervalMs: number;
+  };
+};
+
+function readPersistedProviderSettings(path: string): PersistedProviderSettings {
+  try {
+    const raw = JSON.parse(readFileSync(path, "utf8")) as {
+      codexGateway?: {
+        gatewayUrl?: unknown;
+        preferSse?: unknown;
+        pollingIntervalMs?: unknown;
+      };
+    };
+    const codexGateway = raw.codexGateway;
+    if (!codexGateway) return {};
+    return {
+      codexGateway: {
+        gatewayUrl:
+          typeof codexGateway.gatewayUrl === "string" && codexGateway.gatewayUrl
+            ? codexGateway.gatewayUrl
+            : "http://127.0.0.1:8787",
+        preferSse:
+          typeof codexGateway.preferSse === "boolean" ? codexGateway.preferSse : true,
+        pollingIntervalMs:
+          typeof codexGateway.pollingIntervalMs === "number"
+            ? codexGateway.pollingIntervalMs
+            : 3000
+      }
+    };
+  } catch {
+    return {};
+  }
+}
+
+function writePersistedProviderSettings(path: string, settings: PersistedProviderSettings): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, `${JSON.stringify(settings, null, 2)}\n`, {
+    encoding: "utf8",
+    mode: 0o600
+  });
 }
 
 function mergeLocalTask(previous: AgentTaskDetail, next: AgentTaskDetail): AgentTaskDetail {

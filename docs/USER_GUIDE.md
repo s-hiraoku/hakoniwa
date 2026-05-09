@@ -45,7 +45,7 @@ Environment variables are also supported:
 CODEX_GATEWAY_URL=http://127.0.0.1:8787 CODEX_GATEWAY_TOKEN=... npm run dev
 ```
 
-Secrets are held only in the Electron main process session memory. The renderer sees configured/missing state, not the token value. If the Gateway URL changes without a new token, Hakoniwa clears the previous token and asks for re-entry.
+Secrets are handled only by the Electron main process credential vault. Gateway tokens are encrypted with Electron `safeStorage` and stored under the app user-data directory, with session-memory fallback only when OS encryption is unavailable. The renderer sees configured/missing state, not the token value. If the Gateway URL changes without a new token, Hakoniwa clears the previous token and asks for re-entry.
 
 ## Load Repositories
 

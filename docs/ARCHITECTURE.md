@@ -20,7 +20,7 @@ Electron security defaults:
 ## D1 Modules
 
 - `src/shared`: provider, task, credential, and IPC types shared across process boundaries.
-- `src/main/credentials`: credential vault abstraction with session-memory implementation.
+- `src/main/credentials`: credential vault abstraction with encrypted local storage and session-memory fallback.
 - `src/main/providers`: provider defaults and provider adapters.
 - `src/main/providers/codex-gateway`: typed Codex Gateway client and Agent Backend Provider adapter.
 - `src/preload`: narrow IPC bridge.

@@ -13,6 +13,13 @@ Use this file to record meaningful verification runs.
 
 ## Runs
 
+### 2026-05-09 11:22 JST
+
+- Command: `bash scripts/verify.sh`
+- Scope: encrypted local Gateway token persistence
+- Result: passed
+- Notes: Ran `npm run lint`, `npm run typecheck`, and `npm run build`. `npm test` was skipped because no `test` script is currently defined.
+
 ### 2026-05-09 11:17 JST
 
 - Command: `bash scripts/verify.sh`

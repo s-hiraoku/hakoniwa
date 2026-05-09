@@ -56,8 +56,11 @@ npm run dev</code></pre>
         </ol>
         <pre><code>CODEX_GATEWAY_URL=http://127.0.0.1:8787 CODEX_GATEWAY_TOKEN=... npm run dev</code></pre>
         <p>
-          Secrets stay in Electron main process session memory. If the Gateway
-          URL changes without a new token, Hakoniwa clears the previous token.
+          Secrets stay in the Electron main process credential vault. Gateway
+          tokens are encrypted with Electron <code>safeStorage</code> and stored
+          under the app user-data directory, with session-memory fallback only
+          when OS encryption is unavailable. If the Gateway URL changes without
+          a new token, Hakoniwa clears the previous token.
         </p>
       </section>
 

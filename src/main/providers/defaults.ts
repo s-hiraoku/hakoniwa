@@ -26,7 +26,7 @@ export function createDefaultProviderConfigs(): {
             providerConfigId: CODEX_GATEWAY_PROVIDER_ID,
             key: "token",
             label: "Gateway token",
-            storage: "session-memory"
+            storage: "encrypted-local"
           }
         },
         createdAt: now,

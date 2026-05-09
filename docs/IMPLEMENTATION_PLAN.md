@@ -13,7 +13,7 @@
 - secure Electron shell
 - typed preload bridge
 - provider registry foundation
-- session-memory credential vault
+- encrypted local credential vault with session-memory fallback
 - Codex Gateway client and provider adapter
 - Gateway health check
 - Gateway repo list
@@ -32,7 +32,7 @@
 
 - persistent project registry
 - persistent provider config without secret values
-- OS keychain credential vault
+- provider credential rotation and audit metadata
 - managed worktree registry and lifecycle UX
 - full diff viewer
 - project/worktree scoped xterm.js terminal through main-process PTY

@@ -42,7 +42,7 @@ CODEX_GATEWAY_URL=http://127.0.0.1:8787
 CODEX_GATEWAY_TOKEN=...
 ```
 
-Secrets are held in the Electron main process session memory. The renderer receives only configured/missing credential state. If the Gateway URL changes without a new token, Hakoniwa clears the previous token and asks for re-entry.
+Secrets are handled by the Electron main process credential vault. Gateway tokens are encrypted with Electron `safeStorage` and stored under the app user-data directory, with session-memory fallback only when OS encryption is unavailable. The renderer receives only configured/missing credential state. If the Gateway URL changes without a new token, Hakoniwa clears the previous token and asks for re-entry.
 
 ## D1 Scope
 

@@ -39,12 +39,13 @@ D1 credential storage:
 
 - environment variables read by main process
 - UI token entry passed once over IPC
-- session-memory vault in main process
+- encrypted local vault in the main process using Electron `safeStorage`
+- session-memory fallback when OS encryption is unavailable
 
 Future storage:
 
 - OS keychain
-- encrypted local vault
+- provider-specific credential rotation and audit metadata
 
 ## Interfaces
 
