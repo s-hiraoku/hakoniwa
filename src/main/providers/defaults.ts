@@ -13,10 +13,13 @@ export function createDefaultProviderConfigs(): {
       {
         id: CODEX_GATEWAY_PROVIDER_ID,
         kind: "codex-gateway",
-        displayName: "Codex Gateway",
+        displayName: "Local Agent Gateway",
         enabled: true,
         settings: {
-          gatewayUrl: process.env.CODEX_GATEWAY_URL ?? "http://127.0.0.1:8787",
+          gatewayUrl:
+            process.env.LOCAL_AGENT_GATEWAY_URL ??
+            process.env.CODEX_GATEWAY_URL ??
+            "http://127.0.0.1:8787",
           preferSse: true,
           pollingIntervalMs: 3000
         },

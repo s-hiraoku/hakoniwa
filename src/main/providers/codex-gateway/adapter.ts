@@ -29,7 +29,7 @@ export class CodexGatewayProvider implements AgentBackendProvider {
 
   async healthCheck(): Promise<ProviderHealth> {
     if (!this.config.enabled) {
-      return health("disabled", "Codex Gateway is disabled.");
+      return health("disabled", "Local Agent Gateway is disabled.");
     }
 
     try {
@@ -37,7 +37,7 @@ export class CodexGatewayProvider implements AgentBackendProvider {
       const response = await client.health();
       return health(
         "connected",
-        "Codex Gateway is reachable.",
+        "Local Agent Gateway is reachable.",
         "capabilities" in response ? response.capabilities : undefined
       );
     } catch (error) {
@@ -346,5 +346,5 @@ function health(
 function errorMessage(error: unknown): string {
   if (error instanceof CodexGatewayError) return error.message;
   if (error instanceof Error) return error.message;
-  return "Codex Gateway health check failed.";
+  return "Local Agent Gateway health check failed.";
 }

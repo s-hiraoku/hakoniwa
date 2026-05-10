@@ -2,7 +2,7 @@
 
 Hakoniwa is an independent AI development desktop environment. It owns the desktop UX, task board, project registry, provider registry, credential vault abstraction, worktree manager direction, terminal UI direction, browser preview direction, diff review direction, approval UI direction, provider settings, provider client adapters, and local app state.
 
-Hakoniwa is not a VS Code extension, Theia fork, codex-app-server, or generic LLM API server.
+Hakoniwa is not a VS Code extension, Theia fork, local-agent-gateway, or generic LLM API server.
 
 ## Process Model
 
@@ -22,7 +22,7 @@ Electron security defaults:
 - `src/shared`: provider, task, credential, and IPC types shared across process boundaries.
 - `src/main/credentials`: credential vault abstraction with encrypted local storage and session-memory fallback.
 - `src/main/providers`: provider defaults and provider adapters.
-- `src/main/providers/codex-gateway`: typed Codex Gateway client and Agent Backend Provider adapter.
+- `src/main/providers/codex-gateway`: typed Local Agent Gateway client and Agent Backend Provider adapter.
 - `src/preload`: narrow IPC bridge.
 - `src/renderer`: Hakoniwa workbench shell.
 
@@ -32,4 +32,4 @@ D1 stores created tasks in main-process memory for the current app session. Pers
 
 ## Boundaries
 
-Provider-specific protocol shapes are converted inside adapters. UI components consume `AgentTaskDetail`, `ProviderTarget`, and `ProviderHealth`, not raw Codex Gateway responses.
+Provider-specific protocol shapes are converted inside adapters. UI components consume `AgentTaskDetail`, `ProviderTarget`, and `ProviderHealth`, not raw Local Agent Gateway responses.

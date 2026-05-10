@@ -23,7 +23,7 @@ function HakoniwaApp() {
   const [targetError, setTargetError] = useState<string>();
   const [tasks, setTasks] = useState<AgentTaskDetail[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string>();
-  const [notice, setNotice] = useState<string>("Configure Codex Gateway to start supervising tasks.");
+  const [notice, setNotice] = useState<string>("Configure Local Agent Gateway to start supervising tasks.");
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? tasks[0];
 
   useEffect(() => {
@@ -74,7 +74,7 @@ function HakoniwaApp() {
       const repos = await hakoniwa.listTargets(CODEX_GATEWAY_PROVIDER_ID);
       setTargets(repos);
       setTargetError(undefined);
-      setNotice(repos.length ? "Repository targets loaded from Codex Gateway." : "No repositories returned.");
+      setNotice(repos.length ? "Repository targets loaded from Local Agent Gateway." : "No repositories returned.");
     } catch (error) {
       const message = uiErrorMessage(error, "Repository list failed.");
       setTargets([]);
@@ -197,7 +197,7 @@ function Sidebar(props: {
           <StatusPill status={codexHealth?.status ?? "not-configured"} />
         </div>
         <div className="provider-mini">
-          <strong>Codex Gateway</strong>
+          <strong>Local Agent Gateway</strong>
           <span>{codexHealth?.message ?? "URL and token can be configured in settings."}</span>
         </div>
       </section>
@@ -250,7 +250,7 @@ function TaskWorkspace({ task }: { task?: AgentTaskDetail }) {
     return (
       <section className="task-workspace empty-state">
         <h2>No task selected</h2>
-        <p>Create a Codex Gateway task to see status, timeline, diff readiness, and review surfaces.</p>
+        <p>Create a Local Agent Gateway task to see status, timeline, diff readiness, and review surfaces.</p>
       </section>
     );
   }
@@ -268,7 +268,7 @@ function TaskWorkspace({ task }: { task?: AgentTaskDetail }) {
       </div>
 
       <div className="detail-grid">
-        <InfoTile label="Provider" value="Codex Gateway" />
+        <InfoTile label="Provider" value="Local Agent Gateway" />
         <InfoTile label="Repository" value={task.repoId} />
         <InfoTile label="Mode" value={task.mode} />
         <InfoTile label="Changed files" value={String(task.changedFiles.length)} />
@@ -408,7 +408,7 @@ function SettingsPanel(props: {
     props.setNotice(
       requiresTokenReentry
         ? "Gateway URL changed; re-enter the token before connecting."
-        : "Codex Gateway settings saved."
+        : "Local Agent Gateway settings saved."
     );
     return next;
   }
@@ -432,10 +432,10 @@ function SettingsPanel(props: {
     setHealthChecking(true);
     setLocalHealth({
       status: "configured",
-      message: "Health check started. Waiting for Codex Gateway response...",
+      message: "Health check started. Waiting for Local Agent Gateway response...",
       checkedAt: startedAt
     });
-    props.setNotice("Checking Codex Gateway health...");
+    props.setNotice("Checking Local Agent Gateway health...");
     try {
       const health = await window.hakoniwa.checkProviderHealth(CODEX_GATEWAY_PROVIDER_ID);
       const nextSnapshot = await window.hakoniwa.getProviderSnapshot();
@@ -516,7 +516,7 @@ function SettingsPanel(props: {
           <strong>Gateway health</strong>
           <span>
             {healthChecking
-              ? "checking: waiting for Codex Gateway..."
+              ? "checking: waiting for Local Agent Gateway..."
               : health
                 ? `${health.status}: ${health.message}`
                 : "Not checked yet."}
@@ -547,8 +547,8 @@ function ProviderGroups({ snapshot }: { snapshot?: ProviderSnapshot }) {
         <span key={provider.id}>{provider.displayName} placeholder</span>
       ))}
       <strong>Defaults</strong>
-      <span>Agent backend: Codex Gateway</span>
-      <span>Model: managed by provider for Codex Gateway tasks</span>
+      <span>Agent backend: Local Agent Gateway</span>
+      <span>Model: managed by provider for Local Agent Gateway tasks</span>
     </div>
   );
 }
@@ -630,7 +630,7 @@ function TaskComposer(props: {
             placeholder="Describe the development task to run in the selected repo."
           />
         </label>
-        <div className="managed-model">Model: managed by Codex Gateway</div>
+        <div className="managed-model">Model: managed by Local Agent Gateway</div>
         <button onClick={submit}>Create task</button>
       </div>
     </section>

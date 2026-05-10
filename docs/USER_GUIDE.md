@@ -1,6 +1,6 @@
 # Hakoniwa User Guide
 
-Hakoniwa is an independent desktop app for supervising AI development tasks. The D1 build focuses on a clean path from Codex Gateway configuration to task monitoring.
+Hakoniwa is an independent desktop app for supervising AI development tasks. The D1 build focuses on a clean path from Local Agent Gateway configuration to task monitoring.
 
 ## Quick Start
 
@@ -8,7 +8,7 @@ Requirements:
 
 - Node.js
 - npm
-- a running Codex Gateway, usually at `http://127.0.0.1:8787`
+- a running Local Agent Gateway, usually at `http://127.0.0.1:8787`
 
 Install and launch:
 
@@ -21,9 +21,9 @@ The app opens as a Hakoniwa desktop window. The development command builds a loc
 
 Use the Hakoniwa window for Gateway settings and task creation. The browser preview at `http://127.0.0.1:5173` is useful only for renderer layout checks because it cannot access the Electron preload bridge.
 
-## Codex Gateway
+## Local Agent Gateway
 
-Hakoniwa treats Codex Gateway as an Agent Backend Provider. It is not hardcoded as the whole product architecture.
+Hakoniwa treats Local Agent Gateway as an Agent Backend Provider. It is not hardcoded as the whole product architecture.
 
 Default Gateway URL:
 
@@ -42,8 +42,10 @@ You can configure the Gateway from the Settings panel:
 Environment variables are also supported:
 
 ```bash
-CODEX_GATEWAY_URL=http://127.0.0.1:8787 CODEX_GATEWAY_TOKEN=... npm run dev
+LOCAL_AGENT_GATEWAY_URL=http://127.0.0.1:8787 LOCAL_AGENT_GATEWAY_TOKEN=... npm run dev
 ```
+
+Legacy `CODEX_GATEWAY_URL` and `CODEX_GATEWAY_TOKEN` are still accepted as fallbacks.
 
 Secrets are handled only by the Electron main process credential vault. Gateway tokens are encrypted with Electron `safeStorage` and stored under the app user-data directory, with session-memory fallback only when OS encryption is unavailable. The renderer sees configured/missing state, not the token value. If the Gateway URL changes without a new token, Hakoniwa clears the previous token and asks for re-entry.
 
@@ -76,7 +78,7 @@ Hakoniwa sends:
 }
 ```
 
-The Codex Gateway adapter normalizes the Gateway task response into Hakoniwa's internal task shape before the UI sees it.
+The Local Agent Gateway adapter normalizes the Gateway task response into Hakoniwa's internal task shape before the UI sees it.
 
 ## Monitor A Task
 
@@ -131,7 +133,7 @@ Unauthorized:
 
 No repos returned:
 
-- Confirm Codex Gateway supports `GET /v1/repos`.
+- Confirm Local Agent Gateway supports `GET /v1/repos`.
 - Check that the token has access to the expected repo targets.
 
 Task timeline stops:
@@ -142,5 +144,5 @@ Task timeline stops:
 
 - [Architecture](./ARCHITECTURE.md)
 - [Provider Architecture](./PROVIDER_ARCHITECTURE.md)
-- [Codex Gateway Integration](./CODEX_GATEWAY_INTEGRATION.md)
+- [Local Agent Gateway Integration](./LOCAL_AGENT_GATEWAY_INTEGRATION.md)
 - [Implementation Plan](./IMPLEMENTATION_PLAN.md)

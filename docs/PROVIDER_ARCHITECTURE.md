@@ -8,7 +8,7 @@ Agent Backend Providers run or manage AI development tasks.
 
 Initial and planned kinds:
 
-- `codex-gateway`: Codex Gateway / codex-app-server integration
+- `codex-gateway`: Local Agent Gateway integration. This internal kind name is kept for D1 compatibility with persisted settings.
 - `opencode`: placeholder in D1
 - `direct-api-agent`: placeholder in D1
 

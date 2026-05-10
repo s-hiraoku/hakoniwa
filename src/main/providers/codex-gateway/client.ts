@@ -63,7 +63,7 @@ export class CodexGatewayClient {
 
   private async request(path: string, init: RequestInit = {}): Promise<unknown> {
     if (!this.baseUrl) {
-      throw new CodexGatewayError(0, "Codex Gateway URL is not configured.");
+      throw new CodexGatewayError(0, "Local Agent Gateway URL is not configured.");
     }
 
     const controller = new AbortController();
@@ -78,7 +78,7 @@ export class CodexGatewayClient {
       }
     }).catch((error: unknown) => {
       if (error instanceof Error && error.name === "AbortError") {
-        throw new CodexGatewayError(0, "Codex Gateway request timed out.");
+        throw new CodexGatewayError(0, "Local Agent Gateway request timed out.");
       }
       throw error;
     }).finally(() => clearTimeout(timeout));
@@ -119,15 +119,15 @@ export class CodexGatewayError extends Error {
 function sanitizeGatewayError(status: number, body?: GatewayErrorBody): string {
   const details = formatGatewayErrorDetails(status, body);
   if (status === 401 || status === 403) {
-    return `Codex Gateway rejected the credentials or token scope.${details}`;
+    return `Local Agent Gateway rejected the credentials or token scope.${details}`;
   }
   if (status === 404) {
-    return `Codex Gateway endpoint is unavailable.${details}`;
+    return `Local Agent Gateway endpoint is unavailable.${details}`;
   }
   if (status >= 500) {
-    return `Codex Gateway returned a server error.${details}`;
+    return `Local Agent Gateway returned a server error.${details}`;
   }
-  return `Codex Gateway request failed.${details}`;
+  return `Local Agent Gateway request failed.${details}`;
 }
 
 interface GatewayErrorBody {

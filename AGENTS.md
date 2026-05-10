@@ -8,7 +8,7 @@ Hakoniwa is an independent AI development desktop environment.
 
 Hakoniwa is not a VS Code extension.
 Hakoniwa is not Theia.
-Hakoniwa is not codex-app-server.
+Hakoniwa is not local-agent-gateway.
 Hakoniwa is not a generic LLM API server.
 
 Hakoniwa provides an opinionated desktop UX for supervising AI development tasks across agents, worktrees, terminals, browser previews, diffs, approvals, and multiple AI providers.
@@ -71,16 +71,16 @@ This repository owns:
 
 This repository does not own:
 
-- codex-app-server internals
+- local-agent-gateway internals
 - Codex App Server stdio protocol internals
-- Codex Gateway token/scope/audit implementation
+- Local Agent Gateway token/scope/audit implementation
 - generic LLM API server implementation
 - VS Code extension implementation
 - Theia integration
 - OpenCode internals
 - model provider backend infrastructure
 
-codex-app-server is one possible external provider/backend.
+local-agent-gateway is one possible external provider/backend.
 
 It must not become a hardcoded assumption throughout Hakoniwa.
 
@@ -88,7 +88,7 @@ It must not become a hardcoded assumption throughout Hakoniwa.
 
 Hakoniwa must support multiple kinds of AI backends and LLM/model providers in the future.
 
-Do not hardcode the app around codex-app-server.
+Do not hardcode the app around local-agent-gateway.
 
 Distinguish between the following concepts.
 
@@ -98,7 +98,7 @@ Agent Backend Providers can run or manage AI development tasks.
 
 Examples:
 
-- Codex Gateway / codex-app-server
+- Local Agent Gateway / local-agent-gateway
 - OpenCode
 - Direct API Agent
 - future local agent runtimes
@@ -131,7 +131,7 @@ Do not mix Agent Backend Providers and Model Providers in the type system.
 
 Implement first:
 
-- Codex Gateway as an Agent Backend Provider
+- Local Agent Gateway as an Agent Backend Provider
 
 Design now, but do not fully implement yet:
 
@@ -149,19 +149,20 @@ Provider placeholders are acceptable in early phases.
 
 Hakoniwa must continue working when non-Codex providers are not configured.
 
-## codex-app-server Relationship
+## local-agent-gateway Relationship
 
-codex-app-server is an external backend option.
+local-agent-gateway is an external backend option.
 
-Today it may act as a Codex Gateway.
-In the future it may evolve into a broader LLM API server.
+Today it exposes local agent workflows through a Gateway API.
+In the future it may evolve into a broader local agent or LLM API server.
 
-Hakoniwa must treat codex-app-server as a provider with capabilities, not as the product's core architecture.
+Hakoniwa must treat local-agent-gateway as a provider with capabilities, not as the product's core architecture.
 
 Good:
 
-- `codex-gateway` provider adapter
-- typed Codex Gateway client
+- Local Agent Gateway provider adapter
+- compatibility for the existing internal `codex-gateway` provider kind while persisted settings still use it
+- typed Local Agent Gateway client
 - provider capability detection
 - graceful fallback when Gateway APIs are unavailable
 
@@ -169,9 +170,9 @@ Bad:
 
 - hardcoding all task state around Codex
 - assuming every task has a Codex thread
-- assuming every provider exposes the same APIs as codex-app-server
-- sending raw local paths to codex-app-server
-- making codex-app-server the only possible backend
+- assuming every provider exposes the same APIs as local-agent-gateway
+- sending raw local paths to local-agent-gateway
+- making local-agent-gateway the only possible backend
 
 ## Security Rules
 
@@ -185,8 +186,8 @@ Hard rules:
 - Renderer must not directly perform privileged filesystem operations.
 - Renderer must not directly access secrets after initial user entry.
 - Network requests that require secrets should go through the main process or local backend layer.
-- Do not send raw absolute worktree paths to codex-app-server.
-- Do not assume codex-app-server is desktop-specific.
+- Do not send raw absolute worktree paths to local-agent-gateway.
+- Do not assume local-agent-gateway is desktop-specific.
 - Do not create arbitrary shell execution APIs.
 - Do not silently run destructive commands.
 - Do not implement dangerous agent autonomy without approval gates.
@@ -246,7 +247,7 @@ A task may eventually own or use a managed worktree.
 
 Hakoniwa should own worktree lifecycle and UX.
 
-Do not send raw worktree paths to codex-app-server unless the external backend explicitly supports a safe server-side workspace target registry.
+Do not send raw worktree paths to local-agent-gateway unless the external backend explicitly supports a safe server-side workspace target registry.
 
 Early phases may include only placeholders or design docs for worktrees.
 
@@ -278,7 +279,7 @@ Do not implement browser login/profile/cookie sharing in the MVP.
 2. Provider settings
 3. Provider registry
 4. Credential vault abstraction
-5. Codex Gateway client
+5. Local Agent Gateway client
 6. Gateway health check
 7. Repo list
 8. Task composer

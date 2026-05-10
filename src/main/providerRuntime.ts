@@ -40,7 +40,7 @@ export class ProviderRuntime {
     this.applyPersistedProviderSettings();
 
     const codex = this.configs.agentBackends.find((config) => config.id === CODEX_GATEWAY_PROVIDER_ID);
-    const token = process.env.CODEX_GATEWAY_TOKEN;
+    const token = process.env.LOCAL_AGENT_GATEWAY_TOKEN ?? process.env.CODEX_GATEWAY_TOKEN;
     if (codex?.credentialRefs.token && token) {
       void this.vault.set(codex.credentialRefs.token, token);
     }

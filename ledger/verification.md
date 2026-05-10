@@ -13,6 +13,13 @@ Use this file to record meaningful verification runs.
 
 ## Runs
 
+### 2026-05-10 12:29 JST
+
+- Command: `bash scripts/verify.sh`
+- Scope: Local Agent Gateway rename and environment variable fallback update
+- Result: passed
+- Notes: Ran `npm run lint`, `npm run typecheck`, and `npm run build`. `npm test` was skipped because no `test` script is currently defined.
+
 ### 2026-05-09 11:22 JST
 
 - Command: `bash scripts/verify.sh`
@@ -23,7 +30,7 @@ Use this file to record meaningful verification runs.
 ### 2026-05-09 11:17 JST
 
 - Command: `bash scripts/verify.sh`
-- Scope: Codex Gateway event replay and Agent Response display update
+- Scope: Local Agent Gateway event replay and Agent Response display update
 - Result: passed
 - Notes: Ran `npm run lint`, `npm run typecheck`, and `npm run build`. `npm test` was skipped because no `test` script is currently defined.
 

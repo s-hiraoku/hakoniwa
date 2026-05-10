@@ -25,17 +25,17 @@ Chat is useful, but chat is not the whole product. Task state, diffs, terminal o
 
 Provider Settings:
 
-- Agent Backends: Codex Gateway active, OpenCode and Direct API Agent placeholders
+- Agent Backends: Local Agent Gateway active, OpenCode and Direct API Agent placeholders
 - Model Providers: OpenAI, Anthropic, Gemini, OpenRouter, Ollama, LM Studio, custom OpenAI-compatible placeholders
 - Credentials: configured/missing state only, never raw secret values
-- Defaults: Codex Gateway as default agent backend, model managed by provider for Gateway tasks
+- Defaults: Local Agent Gateway as default agent backend, model managed by provider for Gateway tasks
 
 Task Composer:
 
 - repo selection from Gateway targets
 - prompt
 - read-only or workspace-write mode
-- Agent Backend: Codex Gateway
+- Agent Backend: Local Agent Gateway
 - model shown as managed by provider
 
 Task Detail:

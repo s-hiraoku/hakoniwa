@@ -1,6 +1,6 @@
-# Codex Gateway Integration
+# Local Agent Gateway Integration
 
-Codex Gateway is the first D1 Agent Backend Provider. It is treated as one provider adapter, not as Hakoniwa's core architecture.
+Local Agent Gateway is the first D1 Agent Backend Provider. It is treated as one provider adapter, not as Hakoniwa's core architecture.
 
 ## Configuration
 
@@ -14,9 +14,11 @@ Settings panel fields:
 Optional environment variables:
 
 ```bash
-CODEX_GATEWAY_URL=http://127.0.0.1:8787
-CODEX_GATEWAY_TOKEN=...
+LOCAL_AGENT_GATEWAY_URL=http://127.0.0.1:8787
+LOCAL_AGENT_GATEWAY_TOKEN=...
 ```
+
+Legacy `CODEX_GATEWAY_URL` and `CODEX_GATEWAY_TOKEN` are still accepted as fallbacks.
 
 Tokens are stored by the main process credential vault. D1 uses Electron `safeStorage` to keep an encrypted local token under the app user-data directory, with session-memory fallback only when OS encryption is unavailable. The renderer sees only configured/missing state. If the Gateway URL changes and no replacement token is entered, Hakoniwa clears the existing token so it cannot be sent to a different origin.
 
@@ -37,7 +39,7 @@ Optional endpoint:
 
 Hakoniwa prefers Gateway events when available. Because Authorization headers may be required, the SSE request is made in the main process, not with renderer `EventSource`.
 
-Codex Gateway's current event endpoint may replay the events available at request time and then close. Hakoniwa reconnects with `Last-Event-ID` so it can keep collecting normalized events until the task reaches a terminal state.
+Local Agent Gateway's current event endpoint may replay the events available at request time and then close. Hakoniwa reconnects with `Last-Event-ID` so it can keep collecting normalized events until the task reaches a terminal state.
 
 `agent.message.completed` payloads are normalized into Hakoniwa timeline messages and the task detail Agent Response panel. If the Gateway only reports status, the UI shows that no final response has been reported yet.
 
@@ -83,6 +85,6 @@ Hakoniwa accepts the current Gateway task response shape:
 }
 ```
 
-The Codex Gateway adapter normalizes this wire schema into Hakoniwa's internal `AgentTaskDetail`. UI components do not consume raw Gateway responses.
+The Local Agent Gateway adapter normalizes this wire schema into Hakoniwa's internal `AgentTaskDetail`. UI components do not consume raw Gateway responses.
 
 D1 does not send worktree paths. Worktree targets require a future safe server-side workspace target registry or equivalent Gateway capability.

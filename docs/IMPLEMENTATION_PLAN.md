@@ -14,13 +14,13 @@
 - typed preload bridge
 - provider registry foundation
 - encrypted local credential vault with session-memory fallback
-- Codex Gateway client and provider adapter
+- Local Agent Gateway client and provider adapter
 - Gateway health check
 - Gateway repo list
 - Gateway task creation
 - task board and task detail
 - timeline with SSE and polling fallback
-- Codex Gateway wire schema normalization
+- Local Agent Gateway wire schema normalization
 - task snapshot updates from polling and SSE
 - Gateway URL/token origin safety
 - IPC payload validation

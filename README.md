@@ -3,7 +3,7 @@
 Hakoniwa is an independent desktop workbench for supervising AI development tasks.
 It is task-first, worktree-first, diff-first, terminal-aware, browser-aware, and provider-agnostic.
 
-Hakoniwa is not a VS Code extension, not Theia, not codex-app-server, and not a generic LLM API server.
+Hakoniwa is not a VS Code extension, not Theia, not local-agent-gateway, and not a generic LLM API server.
 
 ## Development
 
@@ -31,16 +31,18 @@ npm run lint
 npm run build
 ```
 
-## Codex Gateway
+## Local Agent Gateway
 
-D1 supports Codex Gateway as the first Agent Backend Provider.
+D1 supports Local Agent Gateway as the first Agent Backend Provider.
 
 Environment variables are optional:
 
 ```bash
-CODEX_GATEWAY_URL=http://127.0.0.1:8787
-CODEX_GATEWAY_TOKEN=...
+LOCAL_AGENT_GATEWAY_URL=http://127.0.0.1:8787
+LOCAL_AGENT_GATEWAY_TOKEN=...
 ```
+
+Legacy `CODEX_GATEWAY_URL` and `CODEX_GATEWAY_TOKEN` are still accepted as fallbacks.
 
 Secrets are handled by the Electron main process credential vault. Gateway tokens are encrypted with Electron `safeStorage` and stored under the app user-data directory, with session-memory fallback only when OS encryption is unavailable. The renderer receives only configured/missing credential state. If the Gateway URL changes without a new token, Hakoniwa clears the previous token and asks for re-entry.
 
@@ -54,7 +56,7 @@ Implemented:
 - typed IPC
 - provider registry foundation
 - Agent Backend Provider and Model Provider type separation
-- Codex Gateway health, repo list, task create, task detail, task snapshot updates, SSE/polling monitoring
+- Local Agent Gateway health, repo list, task create, task detail, task snapshot updates, SSE/polling monitoring
 - provider settings and model provider placeholders
 - task board, task detail, timeline, diff placeholder, terminal placeholder, browser placeholder
 - architecture docs

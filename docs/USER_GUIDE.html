@@ -16,13 +16,13 @@
       <h1>Hakoniwa User Guide</h1>
       <p class="lead">
         Hakoniwa is an independent desktop app for supervising AI development
-        tasks. The D1 build focuses on a clean path from Codex Gateway
+        tasks. The D1 build focuses on a clean path from Local Agent Gateway
         configuration to task monitoring.
       </p>
 
       <section id="quick-start">
         <h2>Quick Start</h2>
-        <p>Requirements: Node.js, npm, and a running Codex Gateway.</p>
+        <p>Requirements: Node.js, npm, and a running Local Agent Gateway.</p>
         <pre><code>npm install
 npm run dev</code></pre>
         <p>
@@ -40,10 +40,10 @@ npm run dev</code></pre>
         </p>
       </section>
 
-      <section id="codex-gateway">
-        <h2>Codex Gateway</h2>
+      <section id="local-agent-gateway">
+        <h2>Local Agent Gateway</h2>
         <p>
-          Hakoniwa treats Codex Gateway as an Agent Backend Provider. The
+          Hakoniwa treats Local Agent Gateway as an Agent Backend Provider. The
           default Gateway URL is:
         </p>
         <pre><code>http://127.0.0.1:8787</code></pre>
@@ -54,7 +54,11 @@ npm run dev</code></pre>
           <li>Click Save.</li>
           <li>Click Health check.</li>
         </ol>
-        <pre><code>CODEX_GATEWAY_URL=http://127.0.0.1:8787 CODEX_GATEWAY_TOKEN=... npm run dev</code></pre>
+        <pre><code>LOCAL_AGENT_GATEWAY_URL=http://127.0.0.1:8787 LOCAL_AGENT_GATEWAY_TOKEN=... npm run dev</code></pre>
+        <p>
+          Legacy <code>CODEX_GATEWAY_URL</code> and
+          <code>CODEX_GATEWAY_TOKEN</code> are still accepted as fallbacks.
+        </p>
         <p>
           Secrets stay in the Electron main process credential vault. Gateway
           tokens are encrypted with Electron <code>safeStorage</code> and stored
@@ -129,7 +133,7 @@ npm run dev</code></pre>
           <dt>Unauthorized</dt>
           <dd>Re-enter the Gateway token.</dd>
           <dt>No repos returned</dt>
-          <dd>Confirm Codex Gateway supports <code>GET /v1/repos</code>.</dd>
+          <dd>Confirm Local Agent Gateway supports <code>GET /v1/repos</code>.</dd>
           <dt>Task timeline stops</dt>
           <dd>Reload the app and run a health check again.</dd>
         </dl>
